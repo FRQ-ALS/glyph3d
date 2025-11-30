@@ -2,7 +2,7 @@ import { Mesh } from "../Mesh";
 import { Scene } from "../Scene";
 import { Vector } from "../Vector";
 import { CubeMeshParams } from "./builder.types";
-import { computeNormalNewells } from "../Spatial/matrices";
+import { VectorMath } from "../Spatial/vector";
 
 /**
  * Factory class for creating mesh objects with various geometric shapes.
@@ -11,7 +11,7 @@ import { computeNormalNewells } from "../Spatial/matrices";
 export class MeshBuilder {
   static Shape(name: string, scene: Scene, config: { shape: Vector[]; depth: number }): Mesh {
     const vertices: Array<Vector> = [...config.shape];
-    const normal = computeNormalNewells(config.shape);
+    const normal = VectorMath.computeNormalNewells(config.shape);
 
     for (let i = 0; i < config.shape.length; i++) {
       const v = config.shape[i];
