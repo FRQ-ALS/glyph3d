@@ -35,7 +35,6 @@ export function normalizeOriginToAnchor(
     x: v.x + ox * size.width,
     y: v.y + oy * size.height,
     z: v.z + oz * size.depth,
-    faces: v.faces
   };
 }
 
@@ -58,6 +57,5 @@ export function toCanvasFromCartesian(
     x: clientWidth / 2 + v.x, // map Cartesian center → canvas center
     y: clientHeight / 2 - v.y, // flip Y (optional, but matches screen coordinates)
     z: v.z,
-    faces: v.faces
   };
 }
