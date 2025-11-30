@@ -2,12 +2,29 @@ import { Mesh } from "../Mesh";
 import { Scene } from "../Scene";
 import { Vector } from "../Vector";
 import { CubeMeshParams } from "./builder.types";
+import { computeNormalNewells } from "../Spatial/matrices";
 
 /**
  * Factory class for creating mesh objects with various geometric shapes.
  * Provides static methods to build complex 3D meshes from simple parameters.
  */
 export class MeshBuilder {
+  static Shape(name: string, scene: Scene, config: { shape: Vector[]; depth: number }): Mesh {
+    const vertices: Array<Vector> = [...config.shape];
+    const normal = computeNormalNewells(config.shape);
+
+    for (let i = 0; i < config.shape.length; i++) {
+      const v = config.shape[i];
+      const newVec = new Vector(
+        v.x + normal.x * config.depth,
+        v.y + normal.y * config.depth,
+        v.z + normal.z * config.depth
+      );
+      vertices.push(newVec);
+    }
+
+    return new Mesh(name, vertices, scene);
+  }
   /**
    * Creates a cubic mesh with 8 corner vertices and 12 triangular faces.
    * Much more efficient than the old volumetric approach.
@@ -18,25 +35,18 @@ export class MeshBuilder {
    * @param params - Parameters defining the cube's position and size
    * @returns A new Mesh instance with 8 vertices that auto-generates 12 triangular faces
    */
+
   static Cube(name: string, scene: Scene, params: CubeMeshParams): Mesh {
     const { x, y, z, edgeLength } = params;
 
-    // Create 8 corner vertices
-    const vertices: Vector[] = [
-      // Front face (z)
+    const face = [
       new Vector(x, y, z), // 0: front-bottom-left
       new Vector(x + edgeLength, y, z), // 1: front-bottom-right
       new Vector(x + edgeLength, y + edgeLength, z), // 2: front-top-right
       new Vector(x, y + edgeLength, z), // 3: front-top-left
-
-      // Back face (z + edgeLength)
-      new Vector(x, y, z + edgeLength), // 4: back-bottom-left
-      new Vector(x + edgeLength, y, z + edgeLength), // 5: back-bottom-right
-      new Vector(x + edgeLength, y + edgeLength, z + edgeLength), // 6: back-top-right
-      new Vector(x, y + edgeLength, z + edgeLength), // 7: back-top-left
     ];
 
-    return new Mesh(name, vertices, scene);
+    return this.Shape(name, scene, { shape: face, depth: edgeLength });
   }
 
   /**
