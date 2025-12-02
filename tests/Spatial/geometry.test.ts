@@ -2,18 +2,8 @@ import { toCanvasFromCartesian } from "src/Spatial";
 import { Vector } from "src/Vector";
 
 describe("normalizeOriginToAnchor", () => {
-  const canvas = document.createElement("canvas");
-  Object.defineProperty(canvas, "clientWidth", {
-    configurable: true,
-    value: 100,
-  });
-
-  Object.defineProperty(canvas, "clientHeight", {
-    configurable: true,
-    value: 100,
-  });
-
-  const { clientWidth, clientHeight } = canvas;
+  const clientWidth = 100,
+    clientHeight = 100;
 
   test("toCanvasFromCartesian", () => {
     const v = new Vector(0, 0, 0);
