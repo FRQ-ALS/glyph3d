@@ -3,22 +3,18 @@ import { Mesh } from "../Mesh";
 import { Vector } from "../Vector";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../Spatial/geometry";
+import { Triangle, Face } from "../Mesh/mesh";
 
 export interface EngineRenderParams {
   pixelDensity: number;
   pixelSize: number;
 }
 
-interface Face {
-  indices: [number, number, number]; // Triangle vertex indices
-  vertices?: Vector[]; // Transformed vertices
-}
-
 export class Engine {
   public canvas: HTMLCanvasElement;
   private _currentFrameId: number = 0;
   public pixelDensity: number = 8;
-  public pixelSize: number = 4;
+  public pixelSize: number = 5;
   public clientHeight: number = 0;
   public clientWidth: number = 0;
   private FOV: number = 120;
@@ -92,28 +88,36 @@ export class Engine {
     // Transform all vertices once
     const transformedVertices = this.transformVertices(vertices, camera);
 
-    // Sort faces by average depth (painter's algorithm - back to front)
-    const facesWithDepth = faces.map((face: Face, faceIndex: number) => {
-      const v0 = transformedVertices[face.indices[0]];
-      const v1 = transformedVertices[face.indices[1]];
-      const v2 = transformedVertices[face.indices[2]];
+    faces.forEach((face: Face) => {
+      this.renderFace(transformedVertices, face, camera, ctx);
+    });
+  }
+
+  private renderFace = (
+    transformedVertices: Array<Vector>,
+    face: Face,
+    camera: Camera,
+    ctx: CanvasRenderingContext2D
+  ) => {
+    const facesWithDepth = face.triangles.map((triangle: Triangle, faceIndex: number) => {
+      const v0 = transformedVertices[triangle.indices[0]];
+      const v1 = transformedVertices[triangle.indices[1]];
+      const v2 = transformedVertices[triangle.indices[2]];
       const avgDepth = (v0.z + v1.z + v2.z) / 3;
       return { face, v0, v1, v2, avgDepth, faceIndex };
     });
     // Sort back to front (larger z first)
     facesWithDepth.sort((a, b) => b.avgDepth - a.avgDepth);
-
     // Process each face
     facesWithDepth.forEach(({ face, v0, v1, v2, faceIndex, avgDepth }) => {
       // Backface culling
       if (!this.isFacingCamera(v0, v1, v2) || !this._isPointVisible(v0, v1, v2, camera)) {
         return;
       }
-
       // Fill the triangle with character specific to this face
-      this.fillTriangle(v0, v1, v2, faceIndex, ctx);
+      this.fillTriangle(v0, v1, v2, face.face, ctx);
     });
-  }
+  };
 
   /**
    * Transform all vertices through the full pipeline
@@ -209,22 +213,7 @@ export class Engine {
    * Face order: 0-1: front, 2-3: back, 4-5: top, 6-7: bottom, 8-9: right, 10-11: left
    */
   private getCharForFace(faceIndex: number): string {
-    // Highly distinct characters for each pair of faces (each side has 2 triangles)
-    const faceChars = [
-      "@",
-      "@", // Front face (0-1) - dense
-      "#",
-      "#", // Back face (2-3) - hash
-      "=",
-      "=", // Top face (4-5) - equals
-      ".",
-      ".", // Bottom face (6-7) - sparse dots
-      "+",
-      "+", // Right face (8-9) - plus
-      "*",
-      "*", // Left face (10-11) - asterisk
-    ];
-
+    const faceChars = ["@", "#", "=", ".", "+", "*"];
     return faceChars[faceIndex] || "?";
   }
 
