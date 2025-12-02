@@ -39,41 +39,4 @@ export class MeshBuilder {
 
     return this.Extrude(name, scene, { shape: face, depth: edgeLength });
   }
-
-  /**
-   * Creates a pyramid mesh with 5 vertices
-   * 4 base vertices + 1 apex
-   */
-  // static Pyramid(name: string, scene: Scene, params: CubeMeshParams): Mesh {
-  //   const { x, y, z, edgeLength } = params;
-  //   const halfLen = edgeLength / 2;
-
-  //   const vertices: Vector[] = [
-  //     // Base (square on XZ plane)
-  //     new Vector(x - halfLen, y, z - halfLen), // 0: base front-left
-  //     new Vector(x + halfLen, y, z - halfLen), // 1: base front-right
-  //     new Vector(x + halfLen, y, z + halfLen), // 2: base back-right
-  //     new Vector(x - halfLen, y, z + halfLen), // 3: base back-left
-
-  //     // Apex
-  //     new Vector(x, y + edgeLength, z), // 4: top point
-  //   ];
-
-  //   // const mesh = new Mesh(name, vertices, scene);
-
-  //   // Manually define pyramid faces
-  //   // mesh.setFaces([
-  //   //   // Base (2 triangles)
-  //   //   { indices: [0, 1, 2] },
-  //   //   { indices: [0, 2, 3] },
-
-  //   //   // Sides (4 triangles)
-  //   //   { indices: [0, 4, 1] }, // Front face
-  //   //   { indices: [1, 4, 2] }, // Right face
-  //   //   { indices: [2, 4, 3] }, // Back face
-  //   //   { indices: [3, 4, 0] }, // Left face
-  //   // ]);
-
-  //   return mesh;
-  // }
 }
