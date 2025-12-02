@@ -4,9 +4,9 @@ import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { toCanvasFromCartesian } from "../Spatial/geometry";
 
 export class Transformer {
-  private fieldOfViewDegrees: number = 120;
-  private fieldOfViewRadians: number = 0;
-  private focalLength: number = 0;
+  public fieldOfViewDegrees: number = 120;
+  public fieldOfViewRadians: number = 0;
+  public focalLength: number = 0;
 
   constructor(private canvasWidth: number, private canvasHeight: number) {
     this.fieldOfViewRadians = (this.fieldOfViewDegrees * Math.PI) / 180;

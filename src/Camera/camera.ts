@@ -20,13 +20,18 @@ export class Camera {
     protected readonly scene: Scene,
     protected pitch: number,
     protected yaw: number,
-    protected origin: Vector
+    protected origin: Vector,
+    protected sensitiviy?: number
   ) {
     scene.setCamera(this);
     // Only set location if instantiating base Camera, not subclasses
     if (new.target === Camera) {
       this.currentLocation = origin;
     }
+  }
+
+  public setSensitiviy(sensitiviy: number) {
+    this.sensitiviy = sensitiviy;
   }
 
   public getCurrentLocation(): Vector | undefined {

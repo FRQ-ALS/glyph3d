@@ -1,9 +1,12 @@
 import { Vector } from "../Vector";
 import { VectorMath } from "../Spatial/vector";
 import { Triangle, Face } from "../Mesh/mesh.types";
+import { Camera } from "../Camera";
+import { Transformer } from "../Transformer";
 
 export class Renderer {
   private zBuffer: Array<Array<number>> = [];
+  private transformer: Transformer;
 
   constructor(
     private pixelSize: number,
@@ -11,6 +14,7 @@ export class Renderer {
     private clientHeight: number
   ) {
     this.initZBuffer();
+    this.transformer = new Transformer(clientWidth, clientHeight);
   }
 
   private initZBuffer() {
@@ -35,12 +39,13 @@ export class Renderer {
   public renderFaces(
     transformedVertices: Array<Vector>,
     faces: Face[],
-    ctx: CanvasRenderingContext2D
+    ctx: CanvasRenderingContext2D,
+    camera: Camera
   ) {
     this.clearZBuffer();
 
     faces.forEach((face: Face) => {
-      this.renderFace(transformedVertices, face, ctx);
+      this.renderFace(transformedVertices, face, ctx, camera);
     });
   }
 
@@ -50,15 +55,27 @@ export class Renderer {
   private renderFace(
     transformedVertices: Array<Vector>,
     face: Face,
-    ctx: CanvasRenderingContext2D
+    ctx: CanvasRenderingContext2D,
+    camera: Camera
   ) {
-    const facesWithDepth = face.triangles.map((triangle: Triangle, faceIndex: number) => {
-      const v0 = transformedVertices[triangle.indices[0]];
-      const v1 = transformedVertices[triangle.indices[1]];
-      const v2 = transformedVertices[triangle.indices[2]];
-      const avgDepth = (v0.z + v1.z + v2.z) / 3;
-      return { face, v0, v1, v2, avgDepth, faceIndex };
-    });
+    const getVerts = (t: Triangle) => t.indices.map((i) => transformedVertices[i]);
+
+    const facesWithDepth = face.triangles
+      .filter((t) => {
+        const [v0, v1, v2] = getVerts(t);
+        return this.isTriangleVisible(v0, v1, v2, camera);
+      })
+      .map((t, faceIndex) => {
+        const [v0, v1, v2] = getVerts(t);
+        return {
+          face,
+          v0,
+          v1,
+          v2,
+          avgDepth: (v0.z + v1.z + v2.z) / 3,
+          faceIndex,
+        };
+      });
 
     // Sort back to front (larger z first)
     facesWithDepth.sort((a, b) => b.avgDepth - a.avgDepth);
@@ -279,5 +296,38 @@ export class Renderer {
         ctx.fillText(char, x, y);
       }
     }
+  }
+
+  isTriangleVisible(v1: Vector, v2: Vector, v3: Vector, camera: Camera) {
+    const cam = camera.getCurrentLocation();
+    if (!cam) return false;
+
+    const avg = {
+      x: (v1.x + v2.x + v3.x) / 3,
+      y: (v1.y + v2.y + v3.y) / 3,
+      z: (v1.z + v2.z + v3.z) / 3,
+    };
+
+    const px = avg.x - cam.x;
+    const py = avg.y - cam.y;
+    const pz = avg.z - cam.z;
+
+    if (pz >= 0) return false;
+
+    // Use positive depth magnitude
+    const depth = -pz;
+
+    const vfov = this.transformer.fieldOfViewRadians;
+    const aspect = this.clientWidth / this.clientHeight;
+
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
+
+    const tanHalfV = Math.tan(vfov / 2);
+    const tanHalfH = Math.tan(hfov / 2);
+
+    const withinH = Math.abs(px / depth) <= tanHalfH;
+    const withinV = Math.abs(py / depth) <= tanHalfV;
+
+    return withinH && withinV;
   }
 }

@@ -7,25 +7,20 @@ export class FreeLookCamera extends Camera {
   constructor(
     protected readonly name: string,
     protected readonly scene: Scene,
-    protected xRotation: number,
-    protected yRotation: number,
+    protected pitch: number,
+    protected yaw: number,
     protected origin: Vector,
-    private zoom: number
+    protected sensitiviy?: number
   ) {
-    super(name, scene, xRotation, yRotation, origin);
-    this.zoom = zoom;
+    super(name, scene, pitch, yaw, origin);
+    this.currentLocation = origin;
   }
-  public setOrigin(vector: Vector): void {}
-  public setXRotation(xRotation: number): void {}
-  public setYRotation(yRotation: number): void {}
 
   public attachControl(canvas: HTMLCanvasElement) {
-    canvas.tabIndex = 0;
-    canvas.focus();
+    this.focusCanvas(canvas);
 
     const MOVE_BY: number = 10;
-    var isDragging = false;
-    var originalPosition: { x: number; y: number } = { x: 0, y: 0 };
+    var originalPosition: { x: number; y: number } | undefined = undefined;
 
     // TODO: Update this to take into account camera rotation
     canvas.addEventListener("keydown", (event) => {
@@ -46,24 +41,32 @@ export class FreeLookCamera extends Camera {
       }
     });
 
-    canvas.addEventListener("mousedown", (event) => {
-      originalPosition.y = event.clientY;
-      originalPosition.x = event.clientX;
-      isDragging = true;
-    });
-
-    canvas.addEventListener("mouseup", () => {
-      isDragging = false;
-    });
-
     canvas.addEventListener("mousemove", (event) => {
-      if (isDragging) {
-        const yDelta = event.clientY - originalPosition.y;
-        const xDelta = event.clientX - originalPosition.x;
+      const { clientX, clientY } = event;
 
-        this.yRotation = this.yRotation + (xDelta / 10000) * Math.PI;
-        this.xRotation = this.xRotation + (yDelta / 10000) * Math.PI;
+      if (!originalPosition) {
+        const rootPos = {
+          x: clientX,
+          y: clientY,
+        };
+        originalPosition = rootPos;
       }
+
+      const x = clientX - originalPosition.x,
+        y = clientY - originalPosition.y;
+      originalPosition.y = clientY;
+      originalPosition.x = clientX;
+      this.calculateMouseRotation({ x: x, y: y });
     });
+  }
+
+  protected calculateMouseRotation(diff: { x: number; y: number }) {
+    // Pitch = rotation about y axis, so need to track change in X
+    // Yaw = rotation about x axis, so need to track change in Y
+    const { x, y } = diff;
+    const pitch = -(y * Math.PI) / 1000;
+    const yaw = -(x * Math.PI) / 1000;
+    this.pitch += pitch;
+    this.yaw += yaw;
   }
 }

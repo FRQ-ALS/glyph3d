@@ -60,6 +60,6 @@ export class Engine {
     const locallyResolved = mesh.resolveMeshRotation();
     const transformedVertices = this.transformer.transformVertices(locallyResolved, camera);
 
-    this.renderer.renderFaces(transformedVertices, mesh.getFaces(), ctx);
+    this.renderer.renderFaces(transformedVertices, mesh.getFaces(), ctx, camera);
   }
 }
