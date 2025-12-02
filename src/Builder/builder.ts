@@ -13,7 +13,6 @@ import { Face, Triangle } from "../Mesh/mesh";
 export class MeshBuilder {
   static Extrude(name: string, scene: Scene, config: { shape: Vector[]; depth: number }): Mesh {
     const { vertices, faces } = Facebuilder.build(config);
-    console.log(faces)
     const mesh = new Mesh(name, vertices, scene, faces);
     return mesh;
   }
