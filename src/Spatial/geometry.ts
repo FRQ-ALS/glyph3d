@@ -15,6 +15,7 @@ import { CoordinateOrigin } from "../Builder/builder.types";
  * @param origin - The anchor/origin describing how (x, y) should be interpreted
  * @param edgeLength - The side length of the square being positioned
  * @returns The adjusted coordinates representing the actual top-left corner
+ * @deprecated
  */
 const ORIGIN_OFFSETS_3D: Record<CoordinateOrigin, [number, number, number]> = {
   "top-left": [0, 0, 0],

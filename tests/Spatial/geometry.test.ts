@@ -1,39 +1,36 @@
-// import { normalizeOriginToAnchor } from "src/Spatial";
-// describe("normalizeOriginToAnchor", () => {
-//   const size = { width: 10, height: 10 };
+import { toCanvasFromCartesian } from "src/Spatial";
+import { Vector } from "src/Vector";
 
-//   test("top-left anchor", () => {
-//     expect(normalizeOriginToAnchor(0, 0, "top-left", size)).toEqual({
-//       x: 0,
-//       y: 0,
-//     });
-//   });
+describe("normalizeOriginToAnchor", () => {
+  const canvas = document.createElement("canvas");
+  Object.defineProperty(canvas, "clientWidth", {
+    configurable: true,
+    value: 100,
+  });
 
-//   test("top-right anchor", () => {
-//     expect(normalizeOriginToAnchor(0, 0, "top-right", size)).toEqual({
-//       x: -10,
-//       y: 0,
-//     });
-//   });
+  Object.defineProperty(canvas, "clientHeight", {
+    configurable: true,
+    value: 100,
+  });
 
-//   test("bottom-left anchor", () => {
-//     expect(normalizeOriginToAnchor(0, 0, "bottom-left", size)).toEqual({
-//       x: 0,
-//       y: -10,
-//     });
-//   });
+  const { clientWidth, clientHeight } = canvas;
 
-//   test("bottom-right anchor", () => {
-//     expect(normalizeOriginToAnchor(0, 0, "bottom-right", size)).toEqual({
-//       x: -10,
-//       y: -10,
-//     });
-//   });
+  test("toCanvasFromCartesian", () => {
+    console.log(clientHeight, clientWidth);
+    const v = new Vector(0, 0, 0);
+    expect(toCanvasFromCartesian(v, { clientHeight, clientWidth })).toEqual({
+      x: 50,
+      y: 50,
+      z: 0,
+    });
+  });
 
-//   test("center anchor", () => {
-//     expect(normalizeOriginToAnchor(0, 0, "center", size)).toEqual({
-//       x: -5,
-//       y: -5,
-//     });
-//   });
-// });
+  test("toCanvasFromCartesian", () => {
+    const v = new Vector(100, 250, 20);
+    expect(toCanvasFromCartesian(v, { clientHeight, clientWidth })).toEqual({
+      x: 150,
+      y: -200,
+      z: 20,
+    });
+  });
+});
