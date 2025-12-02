@@ -4,6 +4,7 @@ import { Vector } from "../Vector";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../Spatial/geometry";
 import { Triangle, Face } from "../Mesh/mesh";
+import { VectorMath } from "../Spatial/vector";
 
 export interface EngineRenderParams {
   pixelDensity: number;
@@ -52,10 +53,7 @@ export class Engine {
   }
 
   runRenderLoop(callback: () => void) {
-    let count = 0;
     const loop = () => {
-      count += 1;
-      // if (count > 1) return;
       callback();
       try {
         this._currentFrameId = requestAnimationFrame(loop);
@@ -360,8 +358,8 @@ export class Engine {
         continue;
       }
 
-      // Z-buffer test
-      if (z < this.zBuffer[gridY][gridX]) {
+      // Z-buffer test (epsilon offers cheap hack to stop overdrawn shared egdes)
+      if (z < this.zBuffer[gridY][gridX] - VectorMath.EPSILON) {
         this.zBuffer[gridY][gridX] = z;
         ctx.fillStyle = color;
         ctx.fillText(char, x, y);
