@@ -219,19 +219,22 @@ export class Engine {
    * Assign a unique color to each face (optional, can keep same color)
    */
   private getColorForFace(faceIndex: number): string {
-    // Can use same color for all, or different colors per face
-    return "#fb4934"; // Keep consistent red color
-
     // OR use different colors per face:
-    // const faceColors = [
-    //   "#fb4934", "#fb4934", // Front - red
-    //   "#b8bb26", "#b8bb26", // Back - green
-    //   "#fabd2f", "#fabd2f", // Top - yellow
-    //   "#83a598", "#83a598", // Bottom - blue
-    //   "#d3869b", "#d3869b", // Right - purple
-    //   "#fe8019", "#fe8019", // Left - orange
-    // ];
-    // return faceColors[faceIndex] || "#fb4934";
+    const faceColors = [
+      "#fb4934",
+      "#fb4934", // Front - red
+      "#b8bb26",
+      "#b8bb26", // Back - green
+      "#fabd2f",
+      "#fabd2f", // Top - yellow
+      "#83a598",
+      "#83a598", // Bottom - blue
+      "#d3869b",
+      "#d3869b", // Right - purple
+      "#fe8019",
+      "#fe8019", // Left - orange
+    ];
+    return faceColors[faceIndex] || "#fb4934";
   }
 
   /**
