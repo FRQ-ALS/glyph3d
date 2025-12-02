@@ -4,55 +4,109 @@ import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { toCanvasFromCartesian } from "../Spatial/geometry";
 
 export class Transformer {
-  private FOV: number = 120;
-  private FOV_RADIANS: number = 0;
-  private FOCAL_LENGTH: number = 0;
+  private fieldOfViewDegrees: number = 120;
+  private fieldOfViewRadians: number = 0;
+  private focalLength: number = 0;
 
-  constructor(private clientWidth: number, private clientHeight: number) {
-    this.FOV_RADIANS = (this.FOV * Math.PI) / 180;
-    this.FOCAL_LENGTH = this.clientWidth / 2 / Math.tan(this.FOV_RADIANS / 2);
+  constructor(private canvasWidth: number, private canvasHeight: number) {
+    this.fieldOfViewRadians = (this.fieldOfViewDegrees * Math.PI) / 180;
+    this.focalLength = this.canvasWidth / 2 / Math.tan(this.fieldOfViewRadians / 2);
   }
 
   /**
-   * Transform all vertices through the full pipeline:
+   * Transform all vertices through the full rendering pipeline:
    * WORLD SPACE → CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
    */
   public transformVertices(vertices: Vector[], camera: Camera): Vector[] {
-    // 1. Camera translation (WORLD SPACE → CAMERA SPACE)
-    const cam = camera.getCurrentLocation();
-    if (!cam) return [];
+    const cameraSpaceVertices = this.translateToWorldSpace(vertices, camera);
+    const viewSpaceVertices = this.applyViewTransformation(cameraSpaceVertices, camera);
+    const screenSpaceVertices = this.convertToScreenSpace(viewSpaceVertices);
 
-    const cameraSpace = vertices.map((coord: Vector) => {
-      return new Vector(coord.x - cam.x, coord.y - cam.y, coord.z - cam.z);
-    });
+    return screenSpaceVertices;
+  }
 
-    // 2. Apply view rotation and projection
-    const rotated = cameraSpace.map((vector) => this.resolveOrientation(vector, camera));
+  /**
+   * Step 1: Translate vertices from world space to camera space
+   */
+  private translateToWorldSpace(vertices: Vector[], camera: Camera): Vector[] {
+    const cameraPosition = camera.getCurrentLocation();
+    if (!cameraPosition) return [];
 
-    // 3. Cast to canvas coordinates
-    return rotated.map((v: Vector) =>
-      toCanvasFromCartesian(v, { clientHeight: this.clientHeight, clientWidth: this.clientWidth })
+    return vertices.map((vertex: Vector) => this.subtractCameraPosition(vertex, cameraPosition));
+  }
+
+  /**
+   * Subtract camera position from a vertex to get camera-relative coordinates
+   */
+  private subtractCameraPosition(vertex: Vector, cameraPosition: Vector): Vector {
+    return new Vector(
+      vertex.x - cameraPosition.x,
+      vertex.y - cameraPosition.y,
+      vertex.z - cameraPosition.z
     );
   }
 
   /**
-   * CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
+   * Step 2: Apply camera rotation and perspective projection
    */
-  private resolveOrientation(vector: Vector, camera: Camera): Vector {
+  private applyViewTransformation(vertices: Vector[], camera: Camera): Vector[] {
+    return vertices.map((vertex) => this.transformToViewSpace(vertex, camera));
+  }
+
+  /**
+   * Transform a single vertex: rotate by camera orientation and apply perspective
+   * CAMERA SPACE → VIEW SPACE → PROJECTION
+   */
+  private transformToViewSpace(vertex: Vector, camera: Camera): Vector {
+    const rotatedVertex = this.applyCameraRotation(vertex, camera);
+    const projectedVertex = this.applyPerspectiveProjection(rotatedVertex);
+
+    return projectedVertex;
+  }
+
+  /**
+   * Rotate vertex based on camera pitch and yaw
+   */
+  private applyCameraRotation(vertex: Vector, camera: Camera): Vector {
     const { pitch, yaw } = camera.getRotation();
 
-    // 1. Rotate around Y axis (yaw)
-    const { x1, z1 } = rotateAroundYAxis(vector.x, vector.z, -yaw);
+    // Apply yaw rotation (around Y axis)
+    const { x1, z1 } = rotateAroundYAxis(vertex.x, vertex.z, -yaw);
 
-    // 2. Rotate around X axis (pitch)
-    const { y2, z2 } = rotateAroundXAxis(vector.y, z1, -pitch);
+    // Apply pitch rotation (around X axis)
+    const { y2, z2 } = rotateAroundXAxis(vertex.y, z1, -pitch);
 
-    // 3. Apply perspective projection
-    const PERSPECTIVE_SCALE_FACTOR = this.FOCAL_LENGTH / (this.FOCAL_LENGTH - z2);
+    return new Vector(x1, y2, z2);
+  }
 
-    const projX = x1 * PERSPECTIVE_SCALE_FACTOR;
-    const projY = y2 * PERSPECTIVE_SCALE_FACTOR;
+  /**
+   * Apply perspective projection using focal length
+   */
+  private applyPerspectiveProjection(vertex: Vector): Vector {
+    const perspectiveScale = this.calculatePerspectiveScale(vertex.z);
 
-    return new Vector(projX, projY, z2);
+    const projectedX = vertex.x * perspectiveScale;
+    const projectedY = vertex.y * perspectiveScale;
+
+    return new Vector(projectedX, projectedY, vertex.z);
+  }
+
+  /**
+   * Calculate perspective scale factor based on depth
+   */
+  private calculatePerspectiveScale(depth: number): number {
+    return this.focalLength / (this.focalLength - depth);
+  }
+
+  /**
+   * Step 3: Convert from view space to screen/canvas coordinates
+   */
+  private convertToScreenSpace(vertices: Vector[]): Vector[] {
+    return vertices.map((vertex: Vector) =>
+      toCanvasFromCartesian(vertex, {
+        clientHeight: this.canvasHeight,
+        clientWidth: this.canvasWidth,
+      })
+    );
   }
 }
