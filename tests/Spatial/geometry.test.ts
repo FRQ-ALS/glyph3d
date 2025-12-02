@@ -16,7 +16,6 @@ describe("normalizeOriginToAnchor", () => {
   const { clientWidth, clientHeight } = canvas;
 
   test("toCanvasFromCartesian", () => {
-    console.log(clientHeight, clientWidth);
     const v = new Vector(0, 0, 0);
     expect(toCanvasFromCartesian(v, { clientHeight, clientWidth })).toEqual({
       x: 50,
