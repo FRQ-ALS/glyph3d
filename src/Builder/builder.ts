@@ -2,9 +2,7 @@ import { Mesh } from "../Mesh";
 import { Scene } from "../Scene";
 import { Vector } from "../Vector";
 import { CubeMeshParams } from "./builder.types";
-import { VectorMath } from "../Spatial/vector";
 import { Facebuilder } from "./face-builder";
-import { Face, Triangle } from "../Mesh/mesh";
 
 /**
  * Factory class for creating mesh objects with various geometric shapes.

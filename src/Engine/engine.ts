@@ -3,7 +3,7 @@ import { Mesh } from "../Mesh";
 import { Vector } from "../Vector";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../Spatial/geometry";
-import { Triangle, Face } from "../Mesh/mesh";
+import { Triangle, Face } from "../Mesh/mesh.types";
 import { VectorMath } from "../Spatial/vector";
 
 export interface EngineRenderParams {
@@ -79,14 +79,12 @@ export class Engine {
     ctx.font = `${size}px monospace`;
     this.clearZBuffer();
 
-    // Get faces from mesh
-    const faces = mesh.getFaces();
-    const vertices = mesh.getCoordinates();
+    const locallyResolved = mesh.resolveMeshRotation();
 
     // Transform all vertices once
-    const transformedVertices = this.transformVertices(vertices, camera);
+    const transformedVertices = this.transformVertices(locallyResolved, camera);
 
-    faces.forEach((face: Face) => {
+    mesh.getFaces().forEach((face: Face) => {
       this.renderFace(transformedVertices, face, camera, ctx);
     });
   }
@@ -121,15 +119,6 @@ export class Engine {
    * Transform all vertices through the full pipeline
    */
   private transformVertices(vertices: Vector[], camera: Camera): Vector[] {
-    // 1. Apply origin centering (LOCAL SPACE)
-    // const objectLocal = vertices.map((v: Vector) => {
-    //   return normalizeOriginToAnchor(v, "center", {
-    //     width: 200,
-    //     height: 200,
-    //     depth: 200,
-    //   });
-    // });
-
     // 2. Camera translation (WORLD SPACE → CAMERA SPACE)
     const cam = camera.getCurrentLocation();
     if (!cam) return [];
