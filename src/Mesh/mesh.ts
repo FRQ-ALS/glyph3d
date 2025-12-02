@@ -1,7 +1,7 @@
 import { Scene } from "../Scene";
 import { Vector } from "../Vector";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
-import { Triangle, Face } from "./mesh.types";
+import { Face } from "./mesh.types";
 
 export class Mesh {
   constructor(

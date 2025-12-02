@@ -1,6 +1,6 @@
 import { Vector } from "../Vector";
 import { VectorMath } from "../Spatial/vector";
-import { Face, Triangle } from "../Mesh/mesh";
+import { Face, Triangle } from "../Mesh/mesh.types";
 
 export namespace Facebuilder {
   export function build(config: { shape: Vector[]; depth: number }): {

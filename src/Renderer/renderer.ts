@@ -1,5 +1,5 @@
 import { Vector } from "../Vector";
-import { VectorMath } from "src/Spatial/vector";
+import { VectorMath } from "../Spatial/vector";
 import { Triangle, Face } from "../Mesh/mesh.types";
 
 export class Renderer {

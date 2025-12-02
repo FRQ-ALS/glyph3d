@@ -58,7 +58,6 @@ export class Engine {
     ctx.font = `${size}px monospace`;
 
     const locallyResolved = mesh.resolveMeshRotation();
-
     const transformedVertices = this.transformer.transformVertices(locallyResolved, camera);
 
     this.renderer.renderFaces(transformedVertices, mesh.getFaces(), ctx);
