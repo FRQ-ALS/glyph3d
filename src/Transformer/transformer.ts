@@ -1,5 +1,6 @@
 import { Camera } from "src/Camera";
 import { Vector } from "../Vector";
+import { Mesh } from "../Mesh";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { toCanvasFromCartesian } from "../Spatial/geometry";
 
@@ -17,8 +18,9 @@ export class Transformer {
    * Transform all vertices through the full rendering pipeline:
    * WORLD SPACE → CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
    */
-  public transformVertices(vertices: Vector[], camera: Camera): Vector[] {
-    const cameraSpaceVertices = this.translateToWorldSpace(vertices, camera);
+  public transformVertices(mesh: Mesh, camera: Camera): Vector[] {
+    const localSpace = mesh.resolveMeshRotation();
+    const cameraSpaceVertices = this.translateToWorldSpace(localSpace, camera);
     const viewSpaceVertices = this.applyViewTransformation(cameraSpaceVertices, camera);
     const screenSpaceVertices = this.convertToScreenSpace(viewSpaceVertices);
 

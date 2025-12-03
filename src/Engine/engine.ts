@@ -1,65 +1,132 @@
-import { Camera } from "src/Camera";
-import { Mesh } from "../Mesh";
 import { Renderer } from "../Renderer";
 import { Transformer } from "../Transformer";
+import type { Scene } from "../Scene";
+import { getPixelDensity } from "../Screen/getPixelDensity";
 
 export interface EngineRenderParams {
   pixelDensity: number;
   pixelSize: number;
 }
 
+const DEFAULT_PIXEL_DENSITY = 8;
+const DEFAULT_PIXEL_SIZE = 5;
+const DEFAULT_BACKGROUND_COLOR = "#282828";
+const DEFAULT_DPR = 2;
+
 export class Engine {
-  public canvas: HTMLCanvasElement;
-  private _currentFrameId: number = 0;
-  public pixelDensity: number = 8;
-  public pixelSize: number = 5;
-  public clientHeight: number = 0;
-  public clientWidth: number = 0;
-  private ctx: CanvasRenderingContext2D | null;
-  private renderer: Renderer;
-  private transformer: Transformer;
+  readonly canvas: HTMLCanvasElement;
+  readonly pixelDensity: number;
+  readonly pixelSize: number;
+  readonly clientHeight: number;
+  readonly clientWidth: number;
+
+  private readonly ctx: CanvasRenderingContext2D;
+  private readonly renderer: Renderer;
+  private readonly transformer: Transformer;
+  private currentFrameId: number = 0;
 
   constructor(canvas: HTMLCanvasElement, params?: EngineRenderParams) {
     this.canvas = canvas;
-    this.pixelDensity = params?.pixelDensity ?? this.pixelDensity;
-    this.pixelSize = params?.pixelSize ?? this.pixelSize;
+    this.pixelDensity = params?.pixelDensity ?? DEFAULT_PIXEL_DENSITY;
+    this.pixelSize = params?.pixelSize ?? DEFAULT_PIXEL_SIZE;
     this.clientHeight = canvas.clientHeight;
     this.clientWidth = canvas.clientWidth;
-    this.ctx = canvas.getContext("2d");
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Failed to get 2D rendering context from canvas");
+    }
+    this.ctx = context;
 
     this.renderer = new Renderer(this.pixelSize, this.clientWidth, this.clientHeight);
     this.transformer = new Transformer(this.clientWidth, this.clientHeight);
+
+    this.initialize();
   }
 
-  runRenderLoop(callback: () => void) {
-    const loop = () => {
+  /**
+   * Initializes the canvas with proper dimensions and scaling
+   */
+  private initialize(): void {
+    const dpr = getPixelDensity(DEFAULT_DPR);
+
+    this.canvas.width = this.canvas.clientWidth * dpr;
+    this.canvas.height = this.canvas.clientHeight * dpr;
+
+    this.ctx.scale(dpr, dpr);
+  }
+
+  /**
+   * Starts the render loop with the provided callback
+   */
+  runRenderLoop(callback: () => void): void {
+    const loop = (): void => {
       callback();
+
       try {
-        this._currentFrameId = requestAnimationFrame(loop);
+        this.currentFrameId = requestAnimationFrame(loop);
       } catch (error) {
-        console.error(error);
+        console.error("Error in render loop:", error);
       }
     };
+
     loop();
   }
 
-  public fillBackground(color: string) {
-    if (!this.ctx) throw new Error("Canvas context missing");
-    this.ctx.fillStyle = color;
-    this.ctx.rect(0, 0, this.clientWidth, this.clientHeight);
-    this.ctx.fill();
+  /**
+   * Stops the current render loop
+   */
+  stopRenderLoop(): void {
+    if (this.currentFrameId !== 0) {
+      cancelAnimationFrame(this.currentFrameId);
+      this.currentFrameId = 0;
+    }
   }
 
-  draw(mesh: Mesh, camera: Camera) {
-    const ctx = this.ctx;
-    const size = this.pixelSize;
-    if (!ctx) return new Error("Canvas context missing");
+  /**
+   * Fills the canvas background with the specified color
+   */
+  fillBackground(color: string): void {
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(0, 0, this.clientWidth, this.clientHeight);
+  }
 
-    ctx.font = `${size}px monospace`;
+  /**
+   * Clears the canvas with the default background color
+   */
+  clearCanvas(): void {
+    this.fillBackground(DEFAULT_BACKGROUND_COLOR);
+  }
 
-    const locallyResolved = mesh.resolveMeshRotation();
-    const transformedVertices = this.transformer.transformVertices(locallyResolved, camera);
+  /**
+   * Renders a scene to the canvas
+   */
+  draw(scene: Scene): void {
+    this.ctx.font = `${this.pixelSize}px monospace`;
 
-    this.renderer.renderFaces(transformedVertices, mesh.getFaces(), ctx, camera);
+    this.clearCanvas();
+    this.renderer.clearZBuffer();
+    this.renderer.clearPixelBuffer();
+
+    const camera = scene.getCamera();
+    if (!camera) {
+      console.warn("Cannot render scene: camera is undefined. Please add a camera to the scene.");
+      return;
+    }
+
+    for (const mesh of scene.getMeshes()) {
+      // Takes care of rotation, translation etc
+      const transformedVertices = this.transformer.transformVertices(mesh, camera);
+      this.renderer.renderFaces(transformedVertices, mesh.getFaces(), camera);
+    }
+
+    this.renderer.flushPixelBuffer(this.ctx);
+  }
+
+  /**
+   * Cleans up resources when the engine is no longer needed
+   */
+  dispose(): void {
+    this.stopRenderLoop();
   }
 }

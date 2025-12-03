@@ -4,8 +4,20 @@ import { Triangle, Face } from "../Mesh/mesh.types";
 import { Camera } from "../Camera";
 import { Transformer } from "../Transformer";
 
+interface Pixel {
+  x: number;
+  y: number;
+  z: number;
+  char: string;
+  color: string;
+  gridX: number;
+  gridY: number;
+  faceIndex: number;
+}
+
 export class Renderer {
   private zBuffer: Array<Array<number>> = [];
+  private pixelBuffer: Array<Pixel> = [];
   private transformer: Transformer;
 
   constructor(
@@ -33,62 +45,43 @@ export class Renderer {
     }
   }
 
-  /**
-   * Render all faces of the mesh
-   */
-  public renderFaces(
-    transformedVertices: Array<Vector>,
-    faces: Face[],
-    ctx: CanvasRenderingContext2D,
-    camera: Camera
-  ) {
-    this.clearZBuffer();
+  public clearPixelBuffer() {
+    this.pixelBuffer = [];
+  }
 
+  public flushPixelBuffer(ctx: CanvasRenderingContext2D) {
+    this.resolveAndRender(ctx);
+  }
+
+  public renderFaces(transformedVertices: Array<Vector>, faces: Face[], camera: Camera) {
+    // Collect all pixels into buffer (accumulates across multiple renderFaces calls)
     faces.forEach((face: Face) => {
-      this.renderFace(transformedVertices, face, ctx, camera);
+      this.collectFacePixels(transformedVertices, face, camera);
     });
   }
 
   /**
-   * Render a single face with all its triangles
+   * Collect all pixels from a single face into the pixel buffer
    */
-  private renderFace(
-    transformedVertices: Array<Vector>,
-    face: Face,
-    ctx: CanvasRenderingContext2D,
-    camera: Camera
-  ) {
+  private collectFacePixels(transformedVertices: Array<Vector>, face: Face, camera: Camera) {
     const getVerts = (t: Triangle) => t.indices.map((i) => transformedVertices[i]);
 
-    const facesWithDepth = face.triangles
-      .filter((t) => {
-        const [v0, v1, v2] = getVerts(t);
-        return this.applyFrustumCulling(v0, v1, v2, camera);
-      })
-      .map((t, faceIndex) => {
-        const [v0, v1, v2] = getVerts(t);
-        return {
-          face,
-          v0,
-          v1,
-          v2,
-          avgDepth: (v0.z + v1.z + v2.z) / 3,
-          faceIndex,
-        };
-      });
+    // Process triangles - collect pixels without rendering
+    face.triangles.forEach((t, faceIndex) => {
+      const [v0, v1, v2] = getVerts(t);
 
-    // Sort back to front (larger z first)
-    facesWithDepth.sort((a, b) => b.avgDepth - a.avgDepth);
+      // Frustum culling
+      if (!this.applyFrustumCulling(v0, v1, v2, camera)) {
+        return;
+      }
 
-    // Process each face
-    facesWithDepth.forEach(({ face, v0, v1, v2, faceIndex }) => {
       // Backface culling
       if (!this.isFacingCamera(v0, v1, v2)) {
         return;
       }
 
-      // Fill the triangle with character specific to this face
-      this.fillTriangle(v0, v1, v2, face.face, ctx);
+      // Collect pixels from this triangle
+      this.collectTrianglePixels(v0, v1, v2, face.face);
     });
   }
 
@@ -112,16 +105,10 @@ export class Renderer {
   }
 
   /**
-   * Fill a triangle with ASCII characters using scan-line algorithm
+   * Collect pixels from a triangle using scan-line algorithm
    * Each face gets a unique character based on its index
    */
-  private fillTriangle(
-    v0: Vector,
-    v1: Vector,
-    v2: Vector,
-    faceIndex: number,
-    ctx: CanvasRenderingContext2D
-  ) {
+  private collectTrianglePixels(v0: Vector, v1: Vector, v2: Vector, faceIndex: number) {
     // Sort vertices by Y coordinate (top to bottom)
     let vertices = [v0, v1, v2].sort((a, b) => a.y - b.y);
     const [top, mid, bot] = vertices;
@@ -131,7 +118,7 @@ export class Renderer {
     const color = this.getColorForFace(faceIndex);
 
     // Rasterize triangle using scan-line algorithm
-    this.rasterizeTriangle(top, mid, bot, char, color, ctx);
+    this.rasterizeTriangleToBuffer(top, mid, bot, char, color, faceIndex);
   }
 
   /**
@@ -166,21 +153,21 @@ export class Renderer {
   }
 
   /**
-   * Rasterize triangle by scanning horizontal lines
+   * Rasterize triangle by scanning horizontal lines and adding to buffer
    */
-  private rasterizeTriangle(
+  private rasterizeTriangleToBuffer(
     top: Vector,
     mid: Vector,
     bot: Vector,
     char: string,
     color: string,
-    ctx: CanvasRenderingContext2D
+    faceIndex: number
   ) {
     // Handle flat triangles separately
     if (Math.abs(top.y - mid.y) < 0.01) {
-      this.fillFlatTopTriangle(top, mid, bot, char, color, ctx);
+      this.fillFlatTopTriangleToBuffer(top, mid, bot, char, color, faceIndex);
     } else if (Math.abs(mid.y - bot.y) < 0.01) {
-      this.fillFlatBottomTriangle(top, mid, bot, char, color, ctx);
+      this.fillFlatBottomTriangleToBuffer(top, mid, bot, char, color, faceIndex);
     } else {
       // Split into two triangles
       // Find point on the long edge at mid.y
@@ -190,22 +177,22 @@ export class Renderer {
       const split = new Vector(splitX, mid.y, splitZ);
 
       // Draw top half (flat bottom)
-      this.fillFlatBottomTriangle(top, mid, split, char, color, ctx);
+      this.fillFlatBottomTriangleToBuffer(top, mid, split, char, color, faceIndex);
       // Draw bottom half (flat top)
-      this.fillFlatTopTriangle(mid, split, bot, char, color, ctx);
+      this.fillFlatTopTriangleToBuffer(mid, split, bot, char, color, faceIndex);
     }
   }
 
   /**
-   * Fill a flat-bottom triangle
+   * Fill a flat-bottom triangle by adding pixels to buffer
    */
-  private fillFlatBottomTriangle(
+  private fillFlatBottomTriangleToBuffer(
     top: Vector,
     left: Vector,
     right: Vector,
     char: string,
     color: string,
-    ctx: CanvasRenderingContext2D
+    faceIndex: number
   ) {
     // Ensure left is actually on the left
     if (left.x > right.x) [left, right] = [right, left];
@@ -222,20 +209,20 @@ export class Renderer {
       const zLeft = top.z + (left.z - top.z) * t;
       const zRight = top.z + (right.z - top.z) * t;
 
-      this.drawScanLine(xLeft, xRight, y, zLeft, zRight, char, color, ctx);
+      this.collectScanLine(xLeft, xRight, y, zLeft, zRight, char, color, faceIndex);
     }
   }
 
   /**
-   * Fill a flat-top triangle
+   * Fill a flat-top triangle by adding pixels to buffer
    */
-  private fillFlatTopTriangle(
+  private fillFlatTopTriangleToBuffer(
     left: Vector,
     right: Vector,
     bot: Vector,
     char: string,
     color: string,
-    ctx: CanvasRenderingContext2D
+    faceIndex: number
   ) {
     // Ensure left is actually on the left
     if (left.x > right.x) [left, right] = [right, left];
@@ -252,14 +239,14 @@ export class Renderer {
       const zLeft = left.z + (bot.z - left.z) * t;
       const zRight = right.z + (bot.z - right.z) * t;
 
-      this.drawScanLine(xLeft, xRight, y, zLeft, zRight, char, color, ctx);
+      this.collectScanLine(xLeft, xRight, y, zLeft, zRight, char, color, faceIndex);
     }
   }
 
   /**
-   * Draw a horizontal scan line
+   * Collect pixels from a horizontal scan line into the buffer
    */
-  private drawScanLine(
+  private collectScanLine(
     xLeft: number,
     xRight: number,
     y: number,
@@ -267,7 +254,7 @@ export class Renderer {
     zRight: number,
     char: string,
     color: string,
-    ctx: CanvasRenderingContext2D
+    faceIndex: number
   ) {
     const xStart = Math.round(xLeft / this.pixelSize) * this.pixelSize;
     const xEnd = Math.round(xRight / this.pixelSize) * this.pixelSize;
@@ -289,12 +276,55 @@ export class Renderer {
         continue;
       }
 
-      // Z-buffer test (epsilon offers cheap hack to stop overdrawn shared egdes)
-      if (z < this.zBuffer[gridY][gridX] - VectorMath.EPSILON) {
-        this.zBuffer[gridY][gridX] = z;
-        ctx.fillStyle = color;
-        ctx.fillText(char, x, y);
+      // Add to pixel buffer
+      this.pixelBuffer.push({
+        x,
+        y,
+        z,
+        char,
+        color,
+        gridX,
+        gridY,
+        faceIndex,
+      });
+    }
+  }
+
+  /**
+   * Resolve depth conflicts and render only the closest pixels
+   */
+  private resolveAndRender(ctx: CanvasRenderingContext2D) {
+    const Z_EPSILON = VectorMath.EPSILON; // Tolerance for z-fighting
+
+    this.pixelBuffer.sort((a, b) => {
+      const gridCompare =
+        a.gridY * this.zBuffer[0].length + a.gridX - (b.gridY * this.zBuffer[0].length + b.gridX);
+
+      if (gridCompare !== 0) return gridCompare;
+
+      const zDiff = b.z - a.z;
+      if (Math.abs(zDiff) > Z_EPSILON) {
+        return zDiff;
       }
+
+      return a.faceIndex - b.faceIndex;
+    });
+
+    // Render only the closest pixel for each grid position
+    let lastGridX = -1;
+    let lastGridY = -1;
+
+    for (const pixel of this.pixelBuffer) {
+      if (pixel.gridX === lastGridX && pixel.gridY === lastGridY) {
+        continue;
+      }
+
+      // Render this pixel
+      ctx.fillStyle = pixel.color;
+      ctx.fillText(pixel.char, pixel.x, pixel.y);
+
+      lastGridX = pixel.gridX;
+      lastGridY = pixel.gridY;
     }
   }
 
