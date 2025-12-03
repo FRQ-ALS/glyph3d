@@ -6,47 +6,47 @@ import { Face } from "./mesh.types";
 export class Mesh {
   constructor(
     readonly name: string,
-    private coordinates: Vector[],
-    private scene: Scene,
-    private faces: Array<Face>,
-    private pitch?: number,
-    private yaw?: number
+    private _vertices: Array<Vector>,
+    private _scene: Scene,
+    private _faces: Array<Face>,
+    private _pitch?: number,
+    private _yaw?: number
   ) {
     this.scene.addMesh(this);
   }
 
-  public getCoordinates() {
-    return this.coordinates;
+  get vertices() {
+    return this._vertices;
   }
 
-  public setPitch(pitch: number) {
-    this.pitch = pitch;
+  set vertices(vertices: Array<Vector>) {
+    this._vertices = vertices;
   }
 
-  public setYaw(yaw: number) {
-    this.yaw = yaw;
+  set pitch(pitch: number) {
+    this._pitch = pitch;
   }
 
-  public getScene() {
-    return this.scene;
+  set yaw(yaw: number) {
+    this._yaw = yaw;
   }
 
-  public setCoordinates(coords: Vector[]) {
-    this.coordinates = coords;
+  get scene() {
+    return this._scene;
   }
 
-  public getFaces(): Face[] {
-    return this.faces;
+  get faces(): Array<Face> {
+    return this._faces;
   }
 
-  public setFaces(faces: Face[]) {
-    this.faces = faces;
+  set faces(faces: Array<Face>) {
+    this._faces = faces;
   }
 
   public resolveMeshRotation(): Array<Vector> {
-    return this.coordinates.map((v: Vector) => {
-      const { x1, z1 } = rotateAroundYAxis(v.x, v.z, this.yaw ?? 0);
-      const { y2, z2 } = rotateAroundXAxis(v.y, z1, this.pitch ?? 0);
+    return this.vertices.map((v: Vector) => {
+      const { x1, z1 } = rotateAroundYAxis(v.x, v.z, this._yaw ?? 0);
+      const { y2, z2 } = rotateAroundXAxis(v.y, z1, this._pitch ?? 0);
 
       return new Vector(x1, y2, z2);
     });

@@ -117,7 +117,7 @@ export class Engine {
     for (const mesh of scene.getMeshes()) {
       // Takes care of rotation, translation etc
       const transformedVertices = this.transformer.transformVertices(mesh, camera);
-      this.renderer.renderFaces(transformedVertices, mesh.getFaces(), camera);
+      this.renderer.renderFaces(transformedVertices, mesh.faces, camera);
     }
 
     this.renderer.flushPixelBuffer(this.ctx);
