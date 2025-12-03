@@ -63,7 +63,7 @@ export class Renderer {
     const facesWithDepth = face.triangles
       .filter((t) => {
         const [v0, v1, v2] = getVerts(t);
-        return this.isTriangleVisible(v0, v1, v2, camera);
+        return this.applyFrustumCulling(v0, v1, v2, camera);
       })
       .map((t, faceIndex) => {
         const [v0, v1, v2] = getVerts(t);
@@ -298,32 +298,22 @@ export class Renderer {
     }
   }
 
-  isTriangleVisible(v1: Vector, v2: Vector, v3: Vector, camera: Camera) {
+  applyFrustumCulling(v1: Vector, v2: Vector, v3: Vector, camera: Camera) {
     const cam = camera.getCurrentLocation();
     if (!cam) return false;
 
-    const avg = {
-      x: (v1.x + v2.x + v3.x) / 3,
-      y: (v1.y + v2.y + v3.y) / 3,
-      z: (v1.z + v2.z + v3.z) / 3,
-    };
-
-    if (avg.z >= 0) return false;
-
-    // Use positive depth magnitude
-    const depth = -avg.z;
+    const verts = [v1, v2, v3];
+    if (verts.every((v) => v.z >= 0)) return false;
 
     const vfov = this.transformer.fieldOfViewRadians;
     const aspect = this.clientWidth / this.clientHeight;
 
-    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
-
     const tanHalfV = Math.tan(vfov / 2);
-    const tanHalfH = Math.tan(hfov / 2);
+    const tanHalfH = tanHalfV * aspect;
 
-    const withinH = Math.abs(avg.x / depth) <= tanHalfH;
-    const withinV = Math.abs(avg.y / depth) <= tanHalfV;
+    if (verts.every((v) => v.x / -v.z < -tanHalfH)) return false;
+    if (verts.every((v) => v.y / -v.z < -tanHalfV)) return false;
 
-    return withinH && withinV;
+    return true;
   }
 }
