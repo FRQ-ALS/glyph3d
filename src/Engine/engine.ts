@@ -9,7 +9,7 @@ export interface EngineRenderParams {
 }
 
 const DEFAULT_PIXEL_DENSITY = 8;
-const DEFAULT_PIXEL_SIZE = 5;
+const DEFAULT_PIXEL_SIZE = 6;
 const DEFAULT_BACKGROUND_COLOR = "#282828";
 const DEFAULT_DPR = 2;
 
@@ -117,7 +117,7 @@ export class Engine {
     for (const mesh of scene.getMeshes()) {
       // Takes care of rotation, translation etc
       const transformedVertices = this.transformer.transformVertices(mesh, camera);
-      this.renderer.renderFaces(transformedVertices, mesh.getFaces(), camera);
+      this.renderer.renderFaces(transformedVertices, mesh.faces, camera);
     }
 
     this.renderer.flushPixelBuffer(this.ctx);
