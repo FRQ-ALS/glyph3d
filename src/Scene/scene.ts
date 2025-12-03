@@ -14,6 +14,13 @@ export class Scene {
     this.engine = engine;
   }
 
+  addMesh(mesh: Mesh) {
+    if (this.meshes.some((m: Mesh) => mesh.name === m.name)) {
+      throw new Error(`Mesh with name ${mesh.name} already exists`);
+    }
+    this.meshes.push(mesh);
+  }
+
   render() {
     this.engine.draw(this);
   }

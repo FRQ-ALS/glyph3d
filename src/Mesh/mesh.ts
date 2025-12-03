@@ -5,14 +5,14 @@ import { Face } from "./mesh.types";
 
 export class Mesh {
   constructor(
-    private readonly name: string,
+    readonly name: string,
     private coordinates: Vector[],
     private scene: Scene,
     private faces: Array<Face>,
     private pitch?: number,
     private yaw?: number
   ) {
-    scene.meshes?.push(this);
+    this.scene.addMesh(this);
   }
 
   public getCoordinates() {
