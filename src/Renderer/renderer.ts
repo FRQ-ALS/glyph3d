@@ -308,14 +308,10 @@ export class Renderer {
       z: (v1.z + v2.z + v3.z) / 3,
     };
 
-    const px = avg.x - cam.x;
-    const py = avg.y - cam.y;
-    const pz = avg.z - cam.z;
-
-    if (pz >= 0) return false;
+    if (avg.z >= 0) return false;
 
     // Use positive depth magnitude
-    const depth = -pz;
+    const depth = -avg.z;
 
     const vfov = this.transformer.fieldOfViewRadians;
     const aspect = this.clientWidth / this.clientHeight;
@@ -325,8 +321,8 @@ export class Renderer {
     const tanHalfV = Math.tan(vfov / 2);
     const tanHalfH = Math.tan(hfov / 2);
 
-    const withinH = Math.abs(px / depth) <= tanHalfH;
-    const withinV = Math.abs(py / depth) <= tanHalfV;
+    const withinH = Math.abs(avg.x / depth) <= tanHalfH;
+    const withinV = Math.abs(avg.y / depth) <= tanHalfV;
 
     return withinH && withinV;
   }
