@@ -100,5 +100,9 @@ export class RotateCamera extends Camera {
 
       lastMousePos = { x: e.clientX, y: e.clientY };
     });
+
+    canvas.addEventListener("mouseout", () => {
+      isDragging = false;
+    });
   }
 }
