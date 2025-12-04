@@ -2,6 +2,9 @@ import { Renderer } from "../Renderer";
 import { Transformer } from "../Transformer";
 import type { Scene } from "../Scene";
 import { getPixelDensity } from "../Screen/getPixelDensity";
+import { AnimationState } from "../Animation/animation.types";
+import { Animation, AnimationExecutor } from "../Animation";
+import { Mesh } from "../Mesh";
 
 export interface EngineRenderParams {
   pixelDensity: number;
@@ -24,6 +27,8 @@ export class Engine {
   private readonly renderer: Renderer;
   private readonly transformer: Transformer;
   private currentFrameId: number = 0;
+  private _timeElapsed: number = 0;
+  private _animationQueue: Array<AnimationState> = [];
 
   constructor(canvas: HTMLCanvasElement, params?: EngineRenderParams) {
     this.canvas = canvas;
@@ -60,9 +65,15 @@ export class Engine {
    * Starts the render loop with the provided callback
    */
   runRenderLoop(callback: () => void): void {
-    const loop = (): void => {
+    // timeStamp in ms
+    let start: number | undefined;
+    const loop = (timeStamp: DOMHighResTimeStamp): void => {
+      if (start == undefined) {
+        start = timeStamp;
+      }
+      this._timeElapsed = timeStamp - start;
       callback();
-
+      this.execAnimations();
       try {
         this.currentFrameId = requestAnimationFrame(loop);
       } catch (error) {
@@ -70,7 +81,7 @@ export class Engine {
       }
     };
 
-    loop();
+    requestAnimationFrame(loop);
   }
 
   /**
@@ -128,5 +139,35 @@ export class Engine {
    */
   dispose(): void {
     this.stopRenderLoop();
+  }
+
+  get timeElapsed() {
+    return this._timeElapsed;
+  }
+
+  execAnimations() {
+    for (const anim of this._animationQueue) {
+      if (
+        anim.animation.elapsedTime >= anim.animation.duration &&
+        anim.animation.iteration != "infinite"
+      ) {
+        this.removeAnimation(anim.animation);
+      }
+      AnimationExecutor.exec(anim, this);
+    }
+  }
+
+  removeAnimation(animation: Animation) {
+    this._animationQueue = this._animationQueue.filter(
+      (anim: AnimationState) => anim.animation != animation
+    );
+  }
+
+  addAnimation(animation: Animation, mesh: Mesh) {
+    this._animationQueue.push({
+      animation: animation,
+      mesh: mesh,
+      timeElapsd: 0,
+    });
   }
 }

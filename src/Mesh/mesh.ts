@@ -2,6 +2,7 @@ import { Scene } from "../Scene";
 import { Vector } from "../Vector";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
 import { Face } from "./mesh.types";
+import { Animation } from "../Animation";
 
 export class Mesh {
   constructor(
@@ -9,8 +10,8 @@ export class Mesh {
     private _vertices: Array<Vector>,
     private _scene: Scene,
     private _faces: Array<Face>,
-    private _pitch?: number,
-    private _yaw?: number
+    private _pitch: number = 0,
+    private _yaw: number = 0
   ) {
     this.scene.addMesh(this);
   }
@@ -43,12 +44,20 @@ export class Mesh {
     this._faces = faces;
   }
 
-  public resolveMeshRotation(): Array<Vector> {
-    return this.vertices.map((v: Vector) => {
+  set x(x: number) {}
+  set y(y: number) {}
+  set z(z: number) {}
+
+  public resolveMeshRotation(v: any): Array<Vector> {
+    return v.map((v: Vector) => {
       const { x1, z1 } = rotateAroundYAxis(v.x, v.z, this._yaw ?? 0);
       const { y2, z2 } = rotateAroundXAxis(v.y, z1, this._pitch ?? 0);
 
       return new Vector(x1, y2, z2);
     });
+  }
+
+  animate(animation: Animation) {
+    this.scene.engine.addAnimation(animation, this);
   }
 }

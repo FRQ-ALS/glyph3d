@@ -1,14 +1,18 @@
 import { Vector } from "../Vector";
 import { VectorMath } from "../Spatial/vector";
 import { Face, Triangle } from "../Mesh/mesh.types";
+import { normalizeOriginToAnchor } from "../Spatial";
+import { CoordinateOrigin, GenericMeshParams } from "./builder.types";
 
 export namespace Facebuilder {
-  export function build(config: { shape: Vector[]; depth: number }): {
+  export function build(geometry: GenericMeshParams): {
     vertices: Array<Vector>;
     faces: Array<Face>;
   } {
-    const { depth, shape } = config;
-    const vertices: Array<Vector> = [...shape];
+    const { depth, shape } = geometry;
+    let vertices: Array<Vector> = [...shape];
+
+    // Use normal to find general direction of shape, then extrude out in the opposite direction
     const normal = VectorMath.computeNormalNewells(shape);
 
     // Create back face by extruding along normal
@@ -20,6 +24,13 @@ export namespace Facebuilder {
         v.z + normal.z * depth
       );
       vertices.push(newVec);
+    }
+
+    if (geometry.origin) {
+      const { width, height } = computeDimensions(vertices);
+      vertices = vertices.map((v: Vector) =>
+        normalizeOriginToAnchor(v, geometry.origin as CoordinateOrigin, { width, height, depth })
+      );
     }
 
     const n = shape.length;
@@ -55,5 +66,30 @@ export namespace Facebuilder {
     }
 
     return { vertices, faces };
+  }
+
+  export function computeDimensions(vertices: Array<Vector>) {
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
+
+    for (const v of vertices) {
+      if (v.x < minX) minX = v.x;
+      if (v.y < minY) minY = v.y;
+      if (v.z < minZ) minZ = v.z;
+
+      if (v.x > maxX) maxX = v.x;
+      if (v.y > maxY) maxY = v.y;
+      if (v.z > maxZ) maxZ = v.z;
+    }
+
+    return {
+      width: Math.abs(maxX - minX),
+      height: Math.abs(maxY - minY),
+      depth: Math.abs(maxZ - minZ),
+    };
   }
 }

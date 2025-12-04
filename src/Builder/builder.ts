@@ -1,7 +1,7 @@
 import { Mesh } from "../Mesh";
 import { Scene } from "../Scene";
 import { Vector } from "../Vector";
-import { CubeMeshParams } from "./builder.types";
+import { CoordinateOrigin, CubeMeshParams, GenericMeshParams } from "./builder.types";
 import { Facebuilder } from "./face-builder";
 
 /**
@@ -9,11 +9,12 @@ import { Facebuilder } from "./face-builder";
  * Provides static methods to build complex 3D meshes from simple parameters.
  */
 export class MeshBuilder {
-  static Extrude(name: string, scene: Scene, config: { shape: Vector[]; depth: number }): Mesh {
-    const { vertices, faces } = Facebuilder.build(config);
+  static Extrude(name: string, scene: Scene, geometry: GenericMeshParams): Mesh {
+    const { vertices, faces } = Facebuilder.build(geometry);
     const mesh = new Mesh(name, vertices, scene, faces);
     return mesh;
   }
+
   /**
    * Creates a cubic mesh with 8 corner vertices and 12 triangular faces.
    * Much more efficient than the old volumetric approach.
@@ -26,15 +27,17 @@ export class MeshBuilder {
    */
 
   static Cube(name: string, scene: Scene, params: CubeMeshParams): Mesh {
-    const { x, y, z, edgeLength } = params;
+    const { position, size } = params;
+    const { x, y, z } = position;
 
     const face = [
       new Vector(x, y, z),
-      new Vector(x + edgeLength, y, z),
-      new Vector(x + edgeLength, y + edgeLength, z),
-      new Vector(x, y + edgeLength, z),
+      new Vector(x + size, y, z),
+      new Vector(x + size, y + size, z),
+      new Vector(x, y + size, z),
     ];
 
-    return this.Extrude(name, scene, { shape: face, depth: edgeLength });
+    const config = { shape: face, depth: size, origin: params.origin };
+    return this.Extrude(name, scene, config);
   }
 }

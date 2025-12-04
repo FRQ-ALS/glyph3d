@@ -2,7 +2,7 @@ import { Camera } from "src/Camera";
 import { Vector } from "../Vector";
 import { Mesh } from "../Mesh";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
-import { toCanvasFromCartesian } from "../Spatial/geometry";
+import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../Spatial/geometry";
 
 export class Transformer {
   public fieldOfViewDegrees: number = 120;
@@ -19,7 +19,14 @@ export class Transformer {
    * WORLD SPACE → CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
    */
   public transformVertices(mesh: Mesh, camera: Camera): Vector[] {
-    const localSpace = mesh.resolveMeshRotation();
+    // const normalized = mesh.vertices.map((v: Vector) =>
+    //   normalizeOriginToAnchor(v, "center", {
+    //     width: 400,
+    //     height: 400,
+    //     depth: 400,
+    //   })
+    // );
+    const localSpace = mesh.resolveMeshRotation(mesh.vertices);
     const cameraSpaceVertices = this.translateToWorldSpace(localSpace, camera);
     const viewSpaceVertices = this.applyViewTransformation(cameraSpaceVertices, camera);
     const screenSpaceVertices = this.convertToScreenSpace(viewSpaceVertices);

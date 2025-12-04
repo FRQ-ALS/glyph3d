@@ -22,7 +22,7 @@ const ORIGIN_OFFSETS_3D: Record<CoordinateOrigin, [number, number, number]> = {
   "top-right": [-1, 0, 0],
   "bottom-right": [-1, -1, 0],
   "bottom-left": [0, -1, 0],
-  center: [-0.5, -0.5, 0],
+  center: [-0.5, -0.5, -0.5],
 };
 
 export function normalizeOriginToAnchor(

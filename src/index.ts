@@ -6,3 +6,4 @@ export * from "./Builder/index.js";
 export * from "./Light/index.js";
 export * from "./Engine/index.js";
 export * from "./Spatial/index.js";
+export * from "./Animation/index.js";
