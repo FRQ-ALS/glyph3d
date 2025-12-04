@@ -44,9 +44,15 @@ export class Mesh {
     this._faces = faces;
   }
 
-  set x(x: number) {}
-  set y(y: number) {}
-  set z(z: number) {}
+  set x(x: number) {
+    this._vertices.forEach((v) => (v.x = v.x + x));
+  }
+  set y(y: number) {
+    this._vertices.forEach((v) => (v.y = v.y = y));
+  }
+  set z(z: number) {
+    this._vertices.forEach((v) => (v.z = v.z + z));
+  }
 
   public resolveMeshRotation(v: any): Array<Vector> {
     return v.map((v: Vector) => {

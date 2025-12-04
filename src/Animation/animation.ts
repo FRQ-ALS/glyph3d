@@ -177,5 +177,7 @@ export class AnimationExecutor {
     mesh[frame.property] = frame.value;
   }
 
-  static translate(frame: AnimationPathFrame, mesh: Mesh) {}
+  static translate(frame: AnimationPathFrame, mesh: Mesh) {
+    mesh[frame.property] = frame.value
+  }
 }

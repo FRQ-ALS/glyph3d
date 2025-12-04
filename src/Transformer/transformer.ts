@@ -19,13 +19,6 @@ export class Transformer {
    * WORLD SPACE → CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
    */
   public transformVertices(mesh: Mesh, camera: Camera): Vector[] {
-    // const normalized = mesh.vertices.map((v: Vector) =>
-    //   normalizeOriginToAnchor(v, "center", {
-    //     width: 400,
-    //     height: 400,
-    //     depth: 400,
-    //   })
-    // );
     const localSpace = mesh.resolveMeshRotation(mesh.vertices);
     const cameraSpaceVertices = this.translateToWorldSpace(localSpace, camera);
     const viewSpaceVertices = this.applyViewTransformation(cameraSpaceVertices, camera);
