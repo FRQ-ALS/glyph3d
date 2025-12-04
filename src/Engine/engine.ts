@@ -147,10 +147,7 @@ export class Engine {
 
   execAnimations() {
     for (const anim of this._animationQueue) {
-      if (
-        anim.animation.elapsedTime >= anim.animation.duration &&
-        anim.animation.iteration != "infinite"
-      ) {
+      if (anim.animation.animationComlete) {
         this.removeAnimation(anim.animation);
       }
       AnimationExecutor.exec(anim, this);
@@ -167,7 +164,6 @@ export class Engine {
     this._animationQueue.push({
       animation: animation,
       mesh: mesh,
-      timeElapsd: 0,
     });
   }
 }

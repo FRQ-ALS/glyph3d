@@ -25,6 +25,4 @@ export type AnimationTiming = "ease" | "ease-in" | "ease-out" | "ease-in-out";
 export interface AnimationState {
   animation: Animation;
   mesh: Mesh;
-  currentIteration?: number;
-  timeElapsd: number;
 }

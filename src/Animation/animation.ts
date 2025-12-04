@@ -25,6 +25,7 @@ export class Animation {
   private _startTimeStamp: number = 0;
   private _elapsedTime: number = 0;
   private _path: Array<AnimationPath> = [];
+  private _animationComplete: boolean = true;
   constructor(
     private _duration: number,
     private _delay: number,
@@ -125,6 +126,12 @@ export class Animation {
   get delay() {
     return this._delay;
   }
+  get animationComplete() {
+    return this._animationComplete;
+  }
+  set animationComlete(status: boolean) {
+    this._animationComplete = status;
+  }
 }
 
 export class AnimationExecutor {
@@ -152,7 +159,10 @@ export class AnimationExecutor {
     }
     const matchedKeyframe = animation.path.find((t: AnimationPath) => t.timestamp >= stamp);
 
-    if (!matchedKeyframe) return;
+    if (!matchedKeyframe) {
+      animation.animationComlete = true;
+      return;
+    }
 
     for (const frame of matchedKeyframe.frames) {
       this.handleFrame(frame, mesh);
@@ -169,8 +179,14 @@ export class AnimationExecutor {
         break;
     }
   }
-  static _shouldRestart(animation: Animation) {
-    return animation.iteration == "infinite" && animation.elapsedTime > animation.duration;
+  static _shouldRestart(animation: Animation): boolean {
+    if (animation.elapsedTime < animation.duration) return false;
+
+    if (typeof animation.iteration == "number") {
+      return animation.elapsedTime / animation.duration < animation.iteration;
+    }
+
+    return animation.iteration == "infinite";
   }
 
   static rotate(frame: AnimationPathFrame, mesh: Mesh) {
@@ -178,6 +194,6 @@ export class AnimationExecutor {
   }
 
   static translate(frame: AnimationPathFrame, mesh: Mesh) {
-    mesh[frame.property] = frame.value
+    mesh[frame.property] = frame.value;
   }
 }
