@@ -25,7 +25,7 @@ export class Animation {
   private _startTimeStamp: number = 0;
   private _elapsedTime: number = 0;
   private _path: Array<AnimationPath> = [];
-  private _animationComplete: boolean = true;
+  private _animationComplete: boolean = false;
   constructor(
     private _duration: number,
     private _delay: number,
