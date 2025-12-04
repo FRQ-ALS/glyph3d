@@ -129,7 +129,7 @@ export class Animation {
   get animationComplete() {
     return this._animationComplete;
   }
-  set animationComlete(status: boolean) {
+  set animationComplete(status: boolean) {
     this._animationComplete = status;
   }
 }
@@ -160,7 +160,7 @@ export class AnimationExecutor {
     const matchedKeyframe = animation.path.find((t: AnimationPath) => t.timestamp >= stamp);
 
     if (!matchedKeyframe) {
-      animation.animationComlete = true;
+      animation.animationComplete = true;
       return;
     }
 

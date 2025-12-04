@@ -147,7 +147,7 @@ export class Engine {
 
   execAnimations() {
     for (const anim of this._animationQueue) {
-      if (anim.animation.animationComlete) {
+      if (anim.animation.animationComplete) {
         this.removeAnimation(anim.animation);
       }
       AnimationExecutor.exec(anim, this);
