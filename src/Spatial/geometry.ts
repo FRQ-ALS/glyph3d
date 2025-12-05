@@ -1,5 +1,5 @@
 import { Vector } from "src/Vector";
-import { CoordinateOrigin } from "../Builder/builder.types";
+import { PivotOrigin } from "../Builder/builder.types";
 
 /**
  * Normalizes a coordinate based on a specified anchor/origin of a square shape.
@@ -17,17 +17,24 @@ import { CoordinateOrigin } from "../Builder/builder.types";
  * @returns The adjusted coordinates representing the actual top-left corner
  * @deprecated
  */
-const ORIGIN_OFFSETS_3D: Record<CoordinateOrigin, [number, number, number]> = {
+const ORIGIN_OFFSETS_3D: Record<PivotOrigin, [number, number, number]> = {
   "top-left": [0, 0, 0],
   "top-right": [-1, 0, 0],
   "bottom-right": [-1, -1, 0],
   "bottom-left": [0, -1, 0],
   center: [-0.5, -0.5, -0.5],
 };
-
+/**
+ *
+ * @param v
+ * @param origin
+ * @param size
+ * @returns
+ * @deprecated
+ */
 export function normalizeOriginToAnchor(
   v: Vector,
-  origin: CoordinateOrigin,
+  origin: PivotOrigin,
   size: { width: number; height: number; depth: number }
 ) {
   const [ox, oy, oz] = ORIGIN_OFFSETS_3D[origin] ?? [0, 0, 0];

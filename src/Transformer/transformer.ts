@@ -19,7 +19,7 @@ export class Transformer {
    * WORLD SPACE → CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
    */
   public transformVertices(mesh: Mesh, camera: Camera): Vector[] {
-    const localSpace = mesh.resolveMeshRotation(mesh.vertices);
+    const localSpace = mesh.resolveLocalMovement();
     const cameraSpaceVertices = this.translateToWorldSpace(localSpace, camera);
     const viewSpaceVertices = this.applyViewTransformation(cameraSpaceVertices, camera);
     const screenSpaceVertices = this.convertToScreenSpace(viewSpaceVertices);

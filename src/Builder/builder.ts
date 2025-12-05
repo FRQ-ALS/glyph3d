@@ -1,7 +1,7 @@
 import { Mesh } from "../Mesh";
 import { Scene } from "../Scene";
 import { Vector } from "../Vector";
-import { CoordinateOrigin, CubeMeshParams, GenericMeshParams } from "./builder.types";
+import { CubeMeshParams, GenericMeshParams } from "./builder.types";
 import { Facebuilder } from "./face-builder";
 
 /**

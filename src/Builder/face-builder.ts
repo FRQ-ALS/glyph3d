@@ -2,7 +2,7 @@ import { Vector } from "../Vector";
 import { VectorMath } from "../Spatial/vector";
 import { Face, Triangle } from "../Mesh/mesh.types";
 import { normalizeOriginToAnchor } from "../Spatial";
-import { CoordinateOrigin, GenericMeshParams } from "./builder.types";
+import { PivotOrigin, GenericMeshParams } from "./builder.types";
 
 export namespace Facebuilder {
   export function build(geometry: GenericMeshParams): {
@@ -24,13 +24,6 @@ export namespace Facebuilder {
         v.z + normal.z * depth
       );
       vertices.push(newVec);
-    }
-
-    if (geometry.origin) {
-      const { width, height } = computeDimensions(vertices);
-      vertices = vertices.map((v: Vector) =>
-        normalizeOriginToAnchor(v, geometry.origin as CoordinateOrigin, { width, height, depth })
-      );
     }
 
     const n = shape.length;

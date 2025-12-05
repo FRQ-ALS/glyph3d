@@ -40,9 +40,9 @@ export class Animation {
   private _createSubAnimation(current: number, next: number) {
     // Duration of each frame in milliseconds, calculated from the difference between consecutive timestamps
     const frameDuration = this._duration / (next - current);
-    let currentFrameTimestamp = 0;
+    let currentFrameTimestamp = frameDuration;
 
-    while (currentFrameTimestamp < (next / 100) * this.duration) {
+    while (currentFrameTimestamp <= (next / 100) * this.duration) {
       const factor = Math.max(currentFrameTimestamp / this.duration, 0);
       const properties = Object.keys(this.keyframes[current]);
 

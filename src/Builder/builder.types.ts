@@ -1,16 +1,16 @@
 import { Vector } from "../Vector";
 
-export type CoordinateOrigin = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
+export type PivotOrigin = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
 
 export interface DefinedShape {
   position: Vector;
-  origin?: CoordinateOrigin;
+  origin?: PivotOrigin;
 }
 
 export interface GenericMeshParams {
   depth: number;
   shape: Array<Vector>;
-  origin?: CoordinateOrigin;
+  origin?: PivotOrigin;
 }
 
 export interface CubeMeshParams extends DefinedShape {
