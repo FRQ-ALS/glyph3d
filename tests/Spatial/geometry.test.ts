@@ -1,5 +1,5 @@
-import { toCanvasFromCartesian } from "src/Spatial";
-import { Vector } from "src/Vector";
+import { toCanvasFromCartesian } from "src/spatial";
+import { Vector } from "src/vector";
 
 describe("normalizeOriginToAnchor", () => {
   const clientWidth = 100,

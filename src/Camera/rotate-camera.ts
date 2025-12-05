@@ -1,7 +1,7 @@
-import { Vector } from "../Vector";
+import { Vector } from "../vector";
 import { Camera } from "./camera";
-import { Scene } from "../Scene";
-import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
+import { Scene } from "../scene";
+import { rotateAroundXAxis, rotateAroundYAxis } from "../spatial";
 
 /**
  * Camera that orbits around a target point at a fixed distance.

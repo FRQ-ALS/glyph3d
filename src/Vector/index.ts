@@ -1,2 +1,2 @@
-export { Vector } from "./vector.js";
+export { Vector } from "./vector";
 

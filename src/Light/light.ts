@@ -1,5 +1,5 @@
-import { Scene } from "../Scene";
-import { Vector } from "../Vector";
+import { Scene } from "../scene";
+import { Vector } from "../vector";
 
 export class Light {
   private readonly name: string;

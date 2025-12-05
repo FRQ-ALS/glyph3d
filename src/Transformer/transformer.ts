@@ -1,8 +1,8 @@
-import { Camera } from "src/Camera";
-import { Vector } from "../Vector";
-import { Mesh } from "../Mesh";
-import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
-import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../Spatial/geometry";
+import { Camera } from "src/camera";
+import { Vector } from "../vector";
+import { Mesh } from "../mesh";
+import { rotateAroundXAxis, rotateAroundYAxis } from "../spatial";
+import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../spatial/geometry";
 
 export class Transformer {
   public fieldOfViewDegrees: number = 120;

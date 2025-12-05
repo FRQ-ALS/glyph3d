@@ -1,1 +1,1 @@
-export { Transformer } from "./transformer.js";
+export { Transformer } from "./transformer";

@@ -1,8 +1,8 @@
-import { Vector } from "../Vector";
-import { VectorMath } from "../Spatial/vector";
-import { Triangle, Face } from "../Mesh/mesh.types";
-import { Camera } from "../Camera";
-import { Transformer } from "../Transformer";
+import { Vector } from "../vector";
+import { VectorMath } from "../spatial/vector";
+import { Triangle, Face } from "../mesh/mesh.types";
+import { Camera } from "../camera";
+import { Transformer } from "../transformer";
 
 interface Pixel {
   x: number;

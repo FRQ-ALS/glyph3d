@@ -1,5 +1,5 @@
-import { Vector } from "../Vector/vector";
-import { Scene } from "../Scene/scene";
+import { Vector } from "../vector/vector";
+import { Scene } from "../scene/scene";
 
 /**
  * Base camera class - a static viewing portal into the scene.

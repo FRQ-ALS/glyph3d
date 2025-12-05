@@ -1,4 +1,4 @@
-import { rotateAroundXAxis, rotateAroundYAxis } from "src/Spatial";
+import { rotateAroundXAxis, rotateAroundYAxis } from "src/spatial";
 
 describe("rotateAroundYAxis", () => {
   it("should return original coordinates when yaw is 0", () => {

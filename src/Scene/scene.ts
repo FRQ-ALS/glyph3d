@@ -1,8 +1,8 @@
-import { Camera } from "../Camera";
-import { Engine } from "../Engine";
-import { Light } from "../Light";
-import { Mesh } from "../Mesh";
-import { getPixelDensity } from "../Screen/getPixelDensity";
+import { Camera } from "../camera";
+import { Engine } from "../engine";
+import { Light } from "../light";
+import { Mesh } from "../mesh";
+import { getPixelDensity } from "../screen/getPixelDensity";
 
 export class Scene {
   public engine: Engine;

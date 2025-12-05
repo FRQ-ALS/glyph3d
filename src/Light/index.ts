@@ -1,1 +1,1 @@
-export { Light } from "./light.js";
+export { Light } from "./light";

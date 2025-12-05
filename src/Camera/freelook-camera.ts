@@ -1,6 +1,6 @@
-import { Vector } from "../Vector";
+import { Vector } from "../vector";
 import { Camera } from "./camera";
-import { Scene } from "../Scene";
+import { Scene } from "../scene";
 
 // Rotates around a point, has zoom
 export class FreeLookCamera extends Camera {

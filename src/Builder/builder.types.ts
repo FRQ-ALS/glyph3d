@@ -1,4 +1,4 @@
-import { Vector } from "../Vector";
+import { Vector } from "../vector";
 
 export type PivotOrigin = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
 

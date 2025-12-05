@@ -1,1 +1,1 @@
-export { Animation, AnimationExecutor } from "./animation.js";
+export { Animation, AnimationExecutor } from "./animation";

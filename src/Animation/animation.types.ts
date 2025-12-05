@@ -1,5 +1,5 @@
 import { Animation } from "./animation";
-import { Mesh } from "../Mesh";
+import { Mesh } from "../mesh";
 
 export type AnimationType = "rotate" | "translate";
 

@@ -1,8 +1,7 @@
-import { Vector } from "../Vector";
-import { VectorMath } from "../Spatial/vector";
-import { Face, Triangle } from "../Mesh/mesh.types";
-import { normalizeOriginToAnchor } from "../Spatial";
-import { PivotOrigin, GenericMeshParams } from "./builder.types";
+import { Vector } from "../vector";
+import { VectorMath } from "../spatial/vector";
+import { Face, Triangle } from "../mesh/mesh.types";
+import { GenericMeshParams } from "./builder.types";
 
 export namespace Facebuilder {
   export function build(geometry: GenericMeshParams): {

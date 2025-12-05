@@ -7,8 +7,8 @@ import {
   AnimatedProperty,
   AnimationType,
 } from "./animation.types";
-import { Mesh } from "../Mesh";
-import { Engine } from "../Engine";
+import { Mesh } from "../mesh";
+import { Engine } from "../engine";
 
 interface AnimationPathFrame {
   property: AnimatedProperty;

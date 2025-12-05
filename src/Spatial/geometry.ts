@@ -1,5 +1,5 @@
-import { Vector } from "src/Vector";
-import { PivotOrigin } from "../Builder/builder.types";
+import { Vector } from "src/vector";
+import { PivotOrigin } from "../builder/builder.types";
 
 /**
  * Normalizes a coordinate based on a specified anchor/origin of a square shape.

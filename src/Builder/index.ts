@@ -1,1 +1,1 @@
-export { MeshBuilder } from "./builder.js";
+export { MeshBuilder } from "./builder";

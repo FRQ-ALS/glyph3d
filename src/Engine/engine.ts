@@ -1,10 +1,10 @@
-import { Renderer } from "../Renderer";
-import { Transformer } from "../Transformer";
-import type { Scene } from "../Scene";
-import { getPixelDensity } from "../Screen/getPixelDensity";
-import { AnimationState } from "../Animation/animation.types";
-import { Animation, AnimationExecutor } from "../Animation";
-import { Mesh } from "../Mesh";
+import { Renderer } from "../renderer";
+import { Transformer } from "../transformer";
+import type { Scene } from "../scene";
+import { getPixelDensity } from "../screen/getPixelDensity";
+import { AnimationState } from "../animation/animation.types";
+import { Animation, AnimationExecutor } from "../animation";
+import { Mesh } from "../mesh";
 
 export interface EngineRenderParams {
   pixelDensity: number;

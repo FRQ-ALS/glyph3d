@@ -1,9 +1,9 @@
-import { Scene } from "../Scene";
-import { Vector } from "../Vector";
-import { rotateAroundXAxis, rotateAroundYAxis } from "../Spatial";
+import { Scene } from "../scene";
+import { Vector } from "../vector";
+import { rotateAroundXAxis, rotateAroundYAxis } from "../spatial";
 import { Face } from "./mesh.types";
-import { Animation } from "../Animation";
-import { Facebuilder } from "../Builder/face-builder";
+import { Animation } from "../animation";
+import { Facebuilder } from "../builder/face-builder";
 
 export class Mesh {
   private _centroid: Vector = new Vector(0, 0, 0);
