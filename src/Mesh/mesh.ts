@@ -54,7 +54,7 @@ export class Mesh {
     this._vertices.forEach((v) => (v.z = v.z + z));
   }
 
-  public resolveMeshRotation(v: any): Array<Vector> {
+  public resolveMeshRotation(v: Array<Vector>): Array<Vector> {
     return v.map((v: Vector) => {
       const { x1, z1 } = rotateAroundYAxis(v.x, v.z, this._yaw ?? 0);
       const { y2, z2 } = rotateAroundXAxis(v.y, z1, this._pitch ?? 0);
