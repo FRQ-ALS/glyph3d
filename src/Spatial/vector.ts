@@ -62,4 +62,12 @@ export namespace VectorMath {
       z: a.x * b.y - a.y * b.x,
     };
   }
+
+  export function scalarCross2D(a: Vector, b: Vector, c: Vector) {
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  }
+
+  export function sign(p: Vector, a: Vector, b: Vector) {
+    return (p.x - b.x) * (a.y - b.y) - (a.x - b.x) * (p.y - b.y);
+  }
 }

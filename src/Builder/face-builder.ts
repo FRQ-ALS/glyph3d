@@ -2,6 +2,7 @@ import { Vector } from "../vector";
 import { VectorMath } from "../spatial/vector";
 import { Face, Triangle } from "../mesh/mesh.types";
 import { GenericMeshParams } from "./builder.types";
+import { earcut } from "../triangulation/ear-clipping";
 
 export namespace Facebuilder {
   export function build(geometry: GenericMeshParams): {
@@ -28,20 +29,24 @@ export namespace Facebuilder {
     const n = shape.length;
     const faces: Face[] = [];
 
-    // 1. FRONT FACE - Triangulate using fan triangulation from first vertex
-    const frontFace: Array<Triangle> = [];
-    for (let i = 1; i < n - 1; i++) {
-      frontFace.push({ indices: [0, i, i + 1] });
-    }
-    faces.push({ face: 0, triangles: frontFace });
+    faces.push({ face: 0, triangles: earcut(shape) });
 
-    // 2. BACK FACE - Triangulate (reversed winding for correct normals)
-    const backFace: Array<Triangle> = [];
-    for (let i = 1; i < n - 1; i++) {
-      backFace.push({ indices: [n, n + i + 1, n + i] });
-    }
+    // Calcaulate back faces, and re-align resulting indexes within context to vertices
+    const back = {
+      face: 1,
+      triangles: earcut(vertices.slice(Math.floor(vertices.length / 2))).map(
+        (triangle: Triangle) => {
+          const offset = Math.floor(vertices.length / 2);
+          const [a, b, c] = triangle.indices.map((index: number) => index + offset).reverse();
+          return {
+            indices: [a, b, c] as [number, number, number],
+          };
+        }
+      ),
+    };
 
-    faces.push({ face: 1, triangles: backFace });
+    faces.push(back);
+
     let sideFace: Array<Triangle> = [];
     // 3. SIDE FACES - Create quads as 2 triangles each
     for (let i = 0; i < n; i++) {
