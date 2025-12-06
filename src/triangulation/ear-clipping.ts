@@ -15,7 +15,7 @@ export function earcut2(vertices: Array<Vector>) {
   while (verts.length > 3) {
     const prev = current === 0 ? verts.length - 1 : current - 1;
     const next = (current + 1) % verts.length;
-
+    let earFound = false;
     const vPrev = verts[prev];
     const vCurr = verts[current];
     const vNext = verts[next];
@@ -43,7 +43,12 @@ export function earcut2(vertices: Array<Vector>) {
         verts.splice(current, 1);
         // After removal, current stays same index
         current = current % verts.length;
+        earFound = true;
         continue;
+      }
+      if (!earFound) {
+        console.warn("earcut could not find an ear. Polygon may be invalid or self-intersecting");
+        break;
       }
     }
 
