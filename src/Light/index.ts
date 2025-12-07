@@ -1,1 +1,1 @@
-export { Light } from "./light";
+export { SpotLight, DirectionalLight, PointLight } from "./light";
