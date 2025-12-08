@@ -23,7 +23,7 @@ export class Camera {
     protected origin: Vector,
     protected sensitiviy?: number
   ) {
-    scene.setCamera(this);
+    scene.activeCamera = this;
     // Only set location if instantiating base Camera, not subclasses
     if (new.target === Camera) {
       this.currentLocation = origin;
