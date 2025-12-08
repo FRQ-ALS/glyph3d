@@ -119,13 +119,16 @@ export class Engine {
     this.renderer.clearZBuffer();
     this.renderer.clearPixelBuffer();
 
-    const camera = scene.getCamera();
+    const camera = scene.activeCamera;
     if (!camera) {
       console.warn("Cannot render scene: camera is undefined. Please add a camera to the scene.");
       return;
     }
+    if (scene.backgroundColor) {
+      this.fillBackground(scene.backgroundColor);
+    }
 
-    for (const mesh of scene.getMeshes()) {
+    for (const mesh of scene.meshes) {
       // Takes care of rotation, translation etc
       const transformedVertices = this.transformer.transformVertices(mesh, camera);
       this.renderer.renderFaces(transformedVertices, mesh.faces, camera);

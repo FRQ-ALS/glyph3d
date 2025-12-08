@@ -2,38 +2,46 @@ import { Camera } from "../camera";
 import { Engine } from "../engine";
 import { Light } from "../light";
 import { Mesh } from "../mesh";
-import { getPixelDensity } from "../screen/getPixelDensity";
 
 export class Scene {
   public engine: Engine;
-  public meshes: Array<Mesh> = [];
-  private activeCamera: Camera | undefined = undefined;
+  private _meshes: Array<Mesh> = [];
+  private _activeCamera: Camera | undefined = undefined;
   public lights: Array<Light> = [];
+  private _backgroundColor: string = "";
 
   constructor(engine: Engine) {
     this.engine = engine;
   }
 
   addMesh(mesh: Mesh) {
-    if (this.meshes.some((m: Mesh) => mesh.name === m.name)) {
+    if (this._meshes.some((m: Mesh) => mesh.name === m.name)) {
       throw new Error(`Mesh with name ${mesh.name} already exists`);
     }
-    this.meshes.push(mesh);
+    this._meshes.push(mesh);
   }
 
   render() {
     this.engine.draw(this);
   }
 
-  public getCamera() {
-    return this.activeCamera;
+  get activeCamera(): Camera | undefined {
+    return this._activeCamera;
   }
 
-  setCamera(camera: Camera) {
-    this.activeCamera = camera;
+  set activeCamera(camera: Camera) {
+    this._activeCamera = camera;
   }
 
-  public getMeshes() {
-    return this.meshes;
+  get meshes(): Array<Mesh> {
+    return this._meshes;
+  }
+
+  get backgroundColor(): string {
+    return this._backgroundColor;
+  }
+
+  set backgroundColor(colour: string) {
+    this._backgroundColor = colour;
   }
 }

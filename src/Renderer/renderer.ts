@@ -3,17 +3,7 @@ import { VectorMath } from "../spatial/vector";
 import { Triangle, Face } from "../mesh/mesh.types";
 import { Camera } from "../camera";
 import { Transformer } from "../transformer";
-
-interface Pixel {
-  x: number;
-  y: number;
-  z: number;
-  char: string;
-  color: string;
-  gridX: number;
-  gridY: number;
-  faceIndex: number;
-}
+import { Pixel } from "./renderer.types";
 
 export class Renderer {
   private zBuffer: Array<Array<number>> = [];
