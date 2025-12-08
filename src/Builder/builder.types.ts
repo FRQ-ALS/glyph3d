@@ -4,7 +4,6 @@ export type PivotOrigin = "top-left" | "top-right" | "bottom-left" | "bottom-rig
 
 export interface DefinedShape {
   position: Vector;
-  origin?: PivotOrigin;
 }
 
 export interface GenericMeshParams {
@@ -15,4 +14,10 @@ export interface GenericMeshParams {
 
 export interface CubeMeshParams extends DefinedShape {
   size: number;
+}
+
+export interface VolumetricShape extends DefinedShape {
+  height: number; // y axis
+  width: number; // x axis
+  depth: number; // z axis
 }

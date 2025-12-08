@@ -1,8 +1,9 @@
 import { Mesh } from "../mesh";
 import { Scene } from "../scene";
 import { Vector } from "../vector";
-import { CubeMeshParams, GenericMeshParams } from "./builder.types";
+import { CubeMeshParams, GenericMeshParams, VolumetricShape } from "./builder.types";
 import { Facebuilder } from "./face-builder";
+import { TemplateBuilder } from "./template-builder";
 
 /**
  * Factory class for creating mesh objects with various geometric shapes.
@@ -37,7 +38,13 @@ export class MeshBuilder {
       new Vector(x, y + size, z),
     ];
 
-    const config = { shape: face, depth: size, origin: params.origin };
+    const config = { shape: face, depth: size };
     return this.Extrude(name, scene, config);
+  }
+
+  static RectangularPyramid(name: string, scene: Scene, shape: VolumetricShape): Mesh {
+    const [vectors, faces] = TemplateBuilder.RectangularPyramid(shape);
+
+    return new Mesh(name, vectors, scene, faces);
   }
 }
