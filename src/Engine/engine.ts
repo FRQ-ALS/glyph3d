@@ -13,7 +13,7 @@ export interface EngineRenderParams {
 
 const DEFAULT_PIXEL_DENSITY = 8;
 const DEFAULT_PIXEL_SIZE = 6;
-const DEFAULT_BACKGROUND_COLOR = "#282828";
+const DEFAULT_BACKGROUND_COLOR = "#faf5f5";
 const DEFAULT_DPR = 2;
 
 export class Engine {
