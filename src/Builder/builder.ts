@@ -44,7 +44,15 @@ export class MeshBuilder {
 
   static RectangularPyramid(name: string, scene: Scene, shape: VolumetricShape): Mesh {
     const [vectors, faces] = TemplateBuilder.RectangularPyramid(shape);
+    return new Mesh(name, vectors, scene, faces);
+  }
+  static Tetrahedron(name: string, scene: Scene, shape: VolumetricShape): Mesh {
+    const [vectors, faces] = TemplateBuilder.Tetrahedron(shape);
+    return new Mesh(name, vectors, scene, faces);
+  }
 
+  static Octahedron(name: string, scene: Scene, shape: VolumetricShape): Mesh {
+    const [vectors, faces] = TemplateBuilder.Octahedron(shape);
     return new Mesh(name, vectors, scene, faces);
   }
 }
