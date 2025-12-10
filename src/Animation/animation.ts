@@ -49,7 +49,11 @@ export class Animation {
       const frames: Array<AnimationPathFrame> = [];
 
       properties.forEach((prop: string) => {
-        const frameMovement = (this.keyframes[next][prop as AnimatedProperty] as number) * factor;
+        const nextValue =
+          this.keyframes[next][prop as AnimatedProperty] ??
+          this.keyframes[current][prop as AnimatedProperty];
+          
+        const frameMovement = (nextValue as number) * factor;
         frames.push({
           property: prop as AnimatedProperty,
           value: frameMovement,
