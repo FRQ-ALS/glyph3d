@@ -10,6 +10,7 @@ export interface GenericMeshParams {
   depth: number;
   shape: Array<Vector>;
   origin?: PivotOrigin;
+  holes?: Array<Array<Vector>>;
 }
 
 export interface CubeMeshParams extends DefinedShape {

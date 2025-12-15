@@ -3,13 +3,14 @@ import { VectorMath } from "../spatial/vector";
 import { Face, Triangle } from "../mesh/mesh.types";
 import { GenericMeshParams } from "./builder.types";
 import { earcut } from "../triangulation/ear-clipping";
+import { Triangulation } from "../triangulation/triangulation";
 
 export namespace Facebuilder {
   export function build(geometry: GenericMeshParams): {
     vertices: Array<Vector>;
     faces: Array<Face>;
   } {
-    const { depth, shape } = geometry;
+    const { depth, shape, holes } = geometry;
     let vertices: Array<Vector> = [...shape];
 
     // Use normal to find general direction of shape, then extrude out in the opposite direction

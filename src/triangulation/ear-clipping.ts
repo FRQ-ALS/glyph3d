@@ -1,14 +1,11 @@
 import { Vector } from "../vector";
 import { VectorMath } from "../spatial/vector";
 import { Triangle } from "src/mesh/mesh.types";
+import { Triangulation } from "./triangulation";
 
-export function earcut(vertices: Array<Vector>): any[] {
-  return earcut2(vertices);
-}
-
-export function earcut2(vertices: Array<Vector>) {
+export function earcut(vertices: Array<Vector>) {
   // Make deep working copy and ensure vertices are CCW
-  const verts: Array<Vector> = ensureCCW([...vertices]);
+  const verts: Array<Vector> = Triangulation.ensureWinding([...vertices], "CCW");
   const triangles: Array<Triangle> = [];
   let current = 0;
 
@@ -21,13 +18,13 @@ export function earcut2(vertices: Array<Vector>) {
     const vNext = verts[next];
 
     // Only convex triangles can be ear cut
-    if (isConvex(vPrev, vCurr, vNext)) {
+    if (Triangulation.isConvex(vPrev, vCurr, vNext)) {
       let contains = false;
 
       for (let i = 0; i < verts.length; i++) {
         if ([current, prev, next].includes(i)) continue;
         // If triangle contains any other vertex within its area then cannot be ear cut
-        if (containsVertex(vPrev, vCurr, vNext, verts[i])) {
+        if (Triangulation.containsVertex(vPrev, vCurr, vNext, verts[i])) {
           contains = true;
           break;
         }
@@ -62,34 +59,4 @@ export function earcut2(vertices: Array<Vector>) {
   });
 
   return triangles;
-}
-
-function containsVertex(a: Vector, b: Vector, c: Vector, p: Vector) {
-  // barycentric sign method (correct)
-  const cross1 = VectorMath.sign(p, a, b);
-  const cross2 = VectorMath.sign(p, b, c);
-  const cross3 = VectorMath.sign(p, c, a);
-
-  const hasNeg = cross1 < 0 || cross2 < 0 || cross3 < 0;
-  const hasPos = cross1 > 0 || cross2 > 0 || cross3 > 0;
-
-  // inside = all same sign OR zero
-  return !(hasNeg && hasPos);
-}
-
-function isConvex(a: Vector, b: Vector, c: Vector) {
-  return VectorMath.scalarCross2D(a, b, c) > 0;
-}
-
-// earcut assumes points are in counter-clockwise. Check if true other wise
-function ensureCCW(vs: Array<Vector>) {
-  let area = 0;
-
-  for (let i = 0; i < vs.length; i++) {
-    const v1 = vs[i];
-    const v2 = vs[(i + 1) % vs.length];
-    area += v1.x * v2.y - v2.x * v1.y;
-  }
-
-  return area > 0 ? vs : vs.reverse();
 }
