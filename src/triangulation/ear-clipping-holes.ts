@@ -41,11 +41,30 @@ function findMutuallyVisiblePoint(vtx: Vector, shape: Array<Vector>) {
     const next = (i + 1) % shape.length;
     // before we even do anything, check if both points are to the right of our point
     if (shape[i].x >= vtx.x && shape[next].x >= vtx.x) {
-      findIntersectingEdge(vtx, shape[i], shape[next]);
+      // findIntersectingEdge(vtx, shape[i], shape[next]);
     }
   }
 }
 
-function findIntersectingEdge(v: Vector, a: Vector, b: Vector) {
-  
+/**
+ * Determines whether an edge satisfies the ray-intersection criteria.
+ *
+ * An edge is considered valid if:
+ * - The starting vertex (vi) lies on or below the ray
+ * - The ending vertex (vi + 1) lies on or above the ray
+ * - The entire edge (two endpoints) lies to the right of point M
+ */
+export function isEdgeIntersectingRayFromRight(m: Vector, v1: Vector, v2: Vector): boolean {
+  if (v1.y > m.y) {
+    return false;
+  }
+
+  if (v2.y < m.y) {
+    return false;
+  }
+
+  if (v1.x < m.x || v2.x < m.x) {
+    return false;
+  }
+  return true;
 }

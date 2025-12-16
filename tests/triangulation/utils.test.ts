@@ -62,7 +62,7 @@ describe("Triangulation", () => {
   });
 
   describe("findLineIntersection", () => {
-    it("finds correct intersectoin", () => {
+    it("returns (2,2) for lines defined by (0,0), (4,4) and (0,4), (4,0)", () => {
       const a1 = new Vector(0, 0, 0);
       const a2 = new Vector(4, 4, 0);
 
