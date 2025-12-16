@@ -70,4 +70,13 @@ export namespace VectorMath {
   export function sign(p: Vector, a: Vector, b: Vector) {
     return (p.x - b.x) * (a.y - b.y) - (a.x - b.x) * (p.y - b.y);
   }
+
+  // Calculate angle between AB & BC. Result in radian
+  export function angle(a: Vector, b: Vector, c: Vector) {
+    const v1 = new Vector(a.x - b.x, a.y - b.y, a.z - b.z);
+    const v2 = new Vector(c.x - b.x, c.y - b.y, c.z - b.z);
+    const dotP = dot(v1, v2);
+
+    return Math.acos(dotP / (magnitude(v1) * magnitude(v2)));
+  }
 }
