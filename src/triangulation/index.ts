@@ -1,1 +1,1 @@
-export { Triangulation } from "./triangulation";
+export { TriangulationUtils } from "./utils";

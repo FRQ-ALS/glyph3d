@@ -1,7 +1,7 @@
 import { Vector } from "../vector";
 import { VectorMath } from "../spatial/vector";
 
-export namespace Triangulation {
+export namespace TriangulationUtils {
   // ensure Counter Clockwise
   export type Winding = "CW" | "CCW";
 
@@ -36,5 +36,25 @@ export namespace Triangulation {
 
     // inside = all same sign OR zero
     return !(hasNeg && hasPos);
+  }
+
+  export function findLineIntersection(a1: Vector, a2: Vector, b1: Vector, b2: Vector) {
+    const lineOne = {
+      a: a2.y - a1.y,
+      b: a1.x - a2.x,
+    };
+    const lineOneC = lineOne.a * a1.x + lineOne.b * a1.y;
+
+    const lineTwo = {
+      a: b2.y - b1.y,
+      b: b1.x - b2.x,
+    };
+    const lineTwoC = lineTwo.a * b1.x + lineTwo.b * b1.y;
+
+    const denominator = lineOne.a * lineTwo.b - lineTwo.a * lineOne.b;
+    const x = (lineOneC * lineTwo.b - lineTwoC * lineOne.b) / denominator;
+    const y = (lineOne.a * lineTwoC - lineTwo.a * lineOneC) / denominator;
+
+    return { x, y };
   }
 }

@@ -3,7 +3,7 @@ import { VectorMath } from "../spatial/vector";
 import { Face, Triangle } from "../mesh/mesh.types";
 import { GenericMeshParams } from "./builder.types";
 import { earcut } from "../triangulation/ear-clipping";
-import { Triangulation } from "../triangulation/triangulation";
+import { Triangulation } from "../triangulation/utils";
 
 export namespace Facebuilder {
   export function build(geometry: GenericMeshParams): {

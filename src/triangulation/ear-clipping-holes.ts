@@ -1,9 +1,9 @@
 import { Vector } from "../vector";
-import { Triangulation } from "./triangulation";
+import { TriangulationUtils } from "./utils";
 
 export function resolveHoles(face: Array<Vector>, holes: Array<Array<Vector>>): Array<Vector> {
   holes.forEach((hole: Array<Vector>) => {
-    const holeCW = Triangulation.ensureWinding(hole, "CW");
+    const holeCW = TriangulationUtils.ensureWinding(hole, "CW");
     const rightMostVtx = findRightMostVtx(holeCW);
   });
   return [];
@@ -46,4 +46,6 @@ function findMutuallyVisiblePoint(vtx: Vector, shape: Array<Vector>) {
   }
 }
 
-function findIntersectingEdge(v: Vector, a: Vector, b: Vector) {}
+function findIntersectingEdge(v: Vector, a: Vector, b: Vector) {
+  
+}

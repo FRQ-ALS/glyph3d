@@ -1,11 +1,11 @@
 import { Vector } from "../vector";
 import { VectorMath } from "../spatial/vector";
 import { Triangle } from "src/mesh/mesh.types";
-import { Triangulation } from "./triangulation";
+import { TriangulationUtils } from "./utils";
 
 export function earcut(vertices: Array<Vector>) {
   // Make deep working copy and ensure vertices are CCW
-  const verts: Array<Vector> = Triangulation.ensureWinding([...vertices], "CCW");
+  const verts: Array<Vector> = TriangulationUtils.ensureWinding([...vertices], "CCW");
   const triangles: Array<Triangle> = [];
   let current = 0;
 
@@ -18,13 +18,13 @@ export function earcut(vertices: Array<Vector>) {
     const vNext = verts[next];
 
     // Only convex triangles can be ear cut
-    if (Triangulation.isConvex(vPrev, vCurr, vNext)) {
+    if (TriangulationUtils.isConvex(vPrev, vCurr, vNext)) {
       let contains = false;
 
       for (let i = 0; i < verts.length; i++) {
         if ([current, prev, next].includes(i)) continue;
         // If triangle contains any other vertex within its area then cannot be ear cut
-        if (Triangulation.containsVertex(vPrev, vCurr, vNext, verts[i])) {
+        if (TriangulationUtils.containsVertex(vPrev, vCurr, vNext, verts[i])) {
           contains = true;
           break;
         }
