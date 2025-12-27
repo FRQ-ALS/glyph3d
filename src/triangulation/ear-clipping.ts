@@ -3,60 +3,82 @@ import { VectorMath } from "../spatial/vector";
 import { Triangle } from "src/mesh/mesh.types";
 import { TriangulationUtils } from "./utils";
 
-export function earcut(vertices: Array<Vector>) {
-  // Make deep working copy and ensure vertices are CCW
-  const verts: Array<Vector> = TriangulationUtils.ensureWinding([...vertices], "CCW");
+export function earcut(vertices: Array<Vector>): Array<Triangle> {
+  if (vertices.length < 3) {
+    throw new Error("Cannot triangulate polygon with fewer than 3 vertices");
+  }
+
+  // Ensure vertices are CCW and create index mapping
+  const verts = TriangulationUtils.ensureWinding([...vertices], "CCW");
+  const indexMap = new Map<Vector, number>();
+  vertices.forEach((v, i) => indexMap.set(v, i));
+
   const triangles: Array<Triangle> = [];
-  let current = 0;
+  const activeIndices = Array.from({ length: verts.length }, (_, i) => i);
 
-  while (verts.length > 3) {
-    const prev = current === 0 ? verts.length - 1 : current - 1;
-    const next = (current + 1) % verts.length;
+  let attempts = 0;
+  const maxAttempts = activeIndices.length * 2;
+
+  while (activeIndices.length > 3) {
+    if (attempts++ > maxAttempts) {
+      console.warn("Earcut failed: polygon may be invalid or self-intersecting");
+      break;
+    }
+
     let earFound = false;
-    const vPrev = verts[prev];
-    const vCurr = verts[current];
-    const vNext = verts[next];
 
-    // Only convex triangles can be ear cut
-    if (TriangulationUtils.isConvex(vPrev, vCurr, vNext)) {
-      let contains = false;
+    for (let i = 0; i < activeIndices.length; i++) {
+      const prevIdx = activeIndices[(i - 1 + activeIndices.length) % activeIndices.length];
+      const currIdx = activeIndices[i];
+      const nextIdx = activeIndices[(i + 1) % activeIndices.length];
 
-      for (let i = 0; i < verts.length; i++) {
-        if ([current, prev, next].includes(i)) continue;
-        // If triangle contains any other vertex within its area then cannot be ear cut
-        if (TriangulationUtils.containsVertex(vPrev, vCurr, vNext, verts[i])) {
-          contains = true;
-          break;
-        }
-      }
+      const vPrev = verts[prevIdx];
+      const vCurr = verts[currIdx];
+      const vNext = verts[nextIdx];
 
-      if (!contains) {
-        triangles.push({
-          // Cant use prev, current and next as they relevant to the verts array. So must extract from original Vertices array
-          indices: [vertices.indexOf(vPrev), vertices.indexOf(vCurr), vertices.indexOf(vNext)],
-        });
-
-        // After we form triangle from point, remove from polygon
-        verts.splice(current, 1);
-        // After removal, current stays same index
-        current = current % verts.length;
-        earFound = true;
+      // Check if this forms a valid ear
+      if (!TriangulationUtils.isConvex(vPrev, vCurr, vNext)) {
         continue;
       }
-      if (!earFound) {
-        console.warn("earcut could not find an ear. Polygon may be invalid or self-intersecting");
+
+      // Check if any other vertex is inside this triangle
+      const hasInteriorPoint = activeIndices.some((idx) => {
+        if (idx === prevIdx || idx === currIdx || idx === nextIdx) {
+          return false;
+        }
+        return TriangulationUtils.containsVertex(vPrev, vCurr, vNext, verts[idx]);
+      });
+
+      if (!hasInteriorPoint) {
+        // Found a valid ear - create triangle
+        triangles.push({
+          indices: [indexMap.get(vPrev)!, indexMap.get(vCurr)!, indexMap.get(vNext)!],
+        });
+
+        // Remove the ear tip
+        activeIndices.splice(i, 1);
+        earFound = true;
+        attempts = 0;
         break;
       }
     }
 
-    // move to next vertex
-    current = (current + 1) % verts.length;
+    if (!earFound) {
+      console.warn("No ear found in current iteration - polygon may be degenerate");
+      break;
+    }
   }
 
-  // Add remaining three triangles
-  triangles.push({
-    indices: [vertices.indexOf(verts[0]), vertices.indexOf(verts[1]), vertices.indexOf(verts[2])],
-  });
+  // Add the final triangle
+  if (activeIndices.length === 3) {
+    triangles.push({
+      indices: [
+        indexMap.get(verts[activeIndices[0]])!,
+        indexMap.get(verts[activeIndices[1]])!,
+        indexMap.get(verts[activeIndices[2]])!,
+      ],
+    });
+  }
 
   return triangles;
 }
