@@ -74,4 +74,17 @@ describe("Triangulation", () => {
       expect(result.y).toBe(2);
     });
   });
+
+  describe("findRightMostVtx", () => {
+    it("should return rightmost point", () => {
+      const squareHole = [
+        new Vector(-150, -150, 0),
+        new Vector(150, -150, 0),
+        new Vector(90, 150, 0),
+        new Vector(-150, 150, 0),
+      ];
+      const result = TriangulationUtils.findRightMostVtx(squareHole);
+      expect(result).toBe(1);
+    });
+  });
 });

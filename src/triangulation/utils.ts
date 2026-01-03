@@ -20,8 +20,16 @@ export namespace TriangulationUtils {
     return isCCW === shouldBeCCW ? vs : [...vs].reverse();
   }
 
+  // Assumes counter-clockwise winding
+  // Is angle at point less than 180
   export function isConvex(a: Vector, b: Vector, c: Vector) {
     return VectorMath.scalarCross2D(a, b, c) > 0;
+  }
+
+  // Assumes counter-clockwise winding
+  // Is angle at point more than 180
+  export function isConcave(a: Vector, b: Vector, c: Vector) {
+    return VectorMath.scalarCross2D(a, b, c) < 0;
   }
 
   // does triangle abc contain vertex p
@@ -56,5 +64,20 @@ export namespace TriangulationUtils {
     const y = (lineOne.a * lineTwoC - lineTwo.a * lineOneC) / denominator;
 
     return { x, y };
+  }
+
+  // Finds rightmost vertex within a shape
+  export function findRightMostVtx(shape: Array<Vector>) {
+    if (shape.length === 0) return -1;
+
+    let currIdx = 0;
+
+    for (let i = 1; i < shape.length; i++) {
+      if (shape[i].x > shape[currIdx].x) {
+        currIdx = i;
+      }
+    }
+
+    return currIdx;
   }
 }

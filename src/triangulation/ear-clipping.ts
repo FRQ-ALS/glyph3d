@@ -65,6 +65,9 @@ export function earcut(vertices: Array<Vector>): Array<Triangle> {
     }
   }
 
+  console.log(vertices);
+  console.log(ears);
+
   const triangles: Array<Triangle> = [];
   let remaining = n;
 
@@ -128,11 +131,9 @@ export function earcut(vertices: Array<Vector>): Array<Triangle> {
       }
     }
   }
-
   // Add final triangle
   if (remaining === 3) {
-    let current = nodes.findIndex((n) => !n.isReflex || ears.has(n.index));
-    if (current === -1) current = 0;
+    let current = Array.from(ears)[0];
 
     const v0 = current;
     const v1 = nodes[v0].next;

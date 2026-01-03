@@ -3,21 +3,36 @@ import { VectorMath } from "../spatial/vector";
 import { Face, Triangle } from "../mesh/mesh.types";
 import { GenericMeshParams } from "./builder.types";
 import { earcut } from "../triangulation/ear-clipping";
+import { resolveHoles } from "../triangulation/ear-clipping-holes";
 
 export namespace Facebuilder {
   /**
    * Builds a 3D mesh by extruding a 2D shape along its normal vector.
    * Creates front face, back face, and connecting side faces.
    */
+
+  export function containsxyz(test: any, obj: any) {
+    for (let i = 0; i < test.length; i++) {
+      const vert = test[i];
+
+      if (vert.x == obj.x && vert.y == obj.y) {
+        return true;
+      }
+    }
+
+    return false;
+  }
   export function build(geometry: GenericMeshParams): {
     vertices: Array<Vector>;
     faces: Array<Face>;
   } {
-    const { depth, shape } = geometry;
+    const { depth, shape, holes = [] } = geometry;
 
-    const normal = VectorMath.computeNormalNewells(shape);
-    const vertices = createExtrudedVertices(shape, normal, depth);
-    const faces = createFaces(shape, vertices);
+    // Use the merged shape that includes the bridges
+    const mergedShape = resolveHoles(shape, holes);
+    const normal = VectorMath.computeNormalNewells(mergedShape);
+    const vertices = createExtrudedVertices(mergedShape, normal, depth);
+    const faces = createFaces(mergedShape, vertices);
 
     return { vertices, faces };
   }
