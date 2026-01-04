@@ -3,103 +3,67 @@ import { VectorMath } from "../spatial/vector";
 import { Face, Triangle } from "../mesh/mesh.types";
 import { GenericMeshParams } from "./builder.types";
 import { earcut } from "../triangulation/ear-clipping";
-import { resolveHoles } from "../triangulation/ear-clipping-holes";
+import { bridgeHolesToBoundary } from "../triangulation/ear-clipping-holes";
 
 export namespace Facebuilder {
   /**
-   * Builds a 3D mesh by extruding a 2D shape along its normal vector.
-   * Creates front face, back face, and connecting side faces.
+   * Builds a 3D mesh by extruding a 2D polygon with holes.
+   * Front/back faces use a bridged polygon.
+   * Side faces are created ONLY from real boundaries (shape + holes).
    */
-
-  export function containsxyz(test: any, obj: any) {
-    for (let i = 0; i < test.length; i++) {
-      const vert = test[i];
-
-      if (vert.x == obj.x && vert.y == obj.y) {
-        return true;
-      }
-    }
-
-    return false;
-  }
   export function build(geometry: GenericMeshParams): {
-    vertices: Array<Vector>;
-    faces: Array<Face>;
+    vertices: Vector[];
+    faces: Face[];
   } {
     const { depth, shape, holes = [] } = geometry;
 
-    // Use the merged shape that includes the bridges
-    const mergedShape = resolveHoles(shape, holes);
+    // Used ONLY for triangulation
+    const mergedShape = bridgeHolesToBoundary(shape, holes);
+
     const normal = VectorMath.computeNormalNewells(mergedShape);
     const vertices = createExtrudedVertices(mergedShape, normal, depth);
-    const faces = createFaces(mergedShape, vertices);
+
+    const indexMap = buildIndexMap(mergedShape);
+    const backOffset = mergedShape.length;
+
+    const faces: Face[] = [];
+
+    faces.push(createFrontFace(mergedShape));
+    faces.push(createBackFace(vertices, backOffset));
+
+    // Side faces: ONLY real contours
+    faces.push(...createSideFacesForLoop(shape, indexMap, backOffset));
+    for (const hole of holes) {
+      faces.push(...createSideFacesForLoop(hole, indexMap, backOffset));
+    }
 
     return { vertices, faces };
   }
 
-  /**
-   * Creates vertices for both front and back faces by extruding along normal.
-   */
-  function createExtrudedVertices(
-    shape: Array<Vector>,
-    normal: Vector,
-    depth: number
-  ): Array<Vector> {
-    const frontVertices = [...shape];
-    const backVertices = shape.map((vertex) => extrudeVertex(vertex, normal, depth));
+  /* ───────────────────────── Vertices ───────────────────────── */
 
-    return [...frontVertices, ...backVertices];
-  }
-
-  /**
-   * Extrudes a single vertex along the normal vector by the given depth.
-   */
-  function extrudeVertex(vertex: Vector, normal: Vector, depth: number): Vector {
-    return new Vector(
-      vertex.x + normal.x * depth,
-      vertex.y + normal.y * depth,
-      vertex.z + normal.z * depth
+  function createExtrudedVertices(shape: Vector[], normal: Vector, depth: number): Vector[] {
+    const front = shape;
+    const back = shape.map(
+      (v) => new Vector(v.x + normal.x * depth, v.y + normal.y * depth, v.z + normal.z * depth)
     );
+
+    return [...front, ...back];
   }
 
-  /**
-   * Creates all faces (front, back, and sides) for the extruded mesh.
-   */
-  function createFaces(shape: Array<Vector>, vertices: Array<Vector>): Array<Face> {
-    const faces: Array<Face> = [];
-    const vertexCount = shape.length;
-    const backVertexOffset = vertexCount;
+  /* ───────────────────────── Faces ───────────────────────── */
 
-    // Front face
-    faces.push(createFrontFace(shape));
-
-    // Back face (reversed winding order)
-    faces.push(createBackFace(vertices, backVertexOffset));
-
-    // Side faces (quads as triangle pairs)
-    faces.push(...createSideFaces(vertexCount, backVertexOffset));
-
-    return faces;
-  }
-
-  /**
-   * Creates the front face by triangulating the shape.
-   */
-  function createFrontFace(shape: Array<Vector>): Face {
+  function createFrontFace(shape: Vector[]): Face {
     return {
       face: 0,
       triangles: earcut(shape),
     };
   }
 
-  /**
-   * Creates the back face with reversed winding order.
-   */
-  function createBackFace(vertices: Array<Vector>, offset: number): Face {
+  function createBackFace(vertices: Vector[], offset: number): Face {
     const backVertices = vertices.slice(offset);
-    const triangles = earcut(backVertices).map((triangle) =>
-      offsetAndReverseTriangle(triangle, offset)
-    );
+
+    const triangles = earcut(backVertices).map((t) => reverseAndOffsetTriangle(t, offset));
 
     return {
       face: 1,
@@ -107,58 +71,69 @@ export namespace Facebuilder {
     };
   }
 
-  /**
-   * Offsets triangle indices and reverses winding order for back-facing triangles.
-   */
-  function offsetAndReverseTriangle(triangle: Triangle, offset: number): Triangle {
-    const [a, b, c] = triangle.indices.map((index) => index + offset).reverse();
-
+  function reverseAndOffsetTriangle(triangle: Triangle, offset: number): Triangle {
+    const [a, b, c] = triangle.indices;
     return {
-      indices: [a, b, c] as [number, number, number],
+      indices: [c + offset, b + offset, a + offset],
     };
   }
 
-  /**
-   * Creates side faces connecting front and back vertices.
-   * Each quad is split into two triangles.
-   */
-  function createSideFaces(vertexCount: number, backOffset: number): Array<Face> {
-    const faces: Array<Face> = [];
+  /* ───────────────────────── Side Faces ───────────────────────── */
 
-    for (let i = 0; i < vertexCount; i++) {
-      const nextIndex = (i + 1) % vertexCount;
+  function createSideFacesForLoop(
+    loop: Vector[],
+    indexMap: Map<string, number>,
+    backOffset: number
+  ): Face[] {
+    const faces: Face[] = [];
 
-      const frontCurrent = i;
-      const frontNext = nextIndex;
-      const backCurrent = i + backOffset;
-      const backNext = nextIndex + backOffset;
+    for (let i = 0; i < loop.length; i++) {
+      const a = loop[i];
+      const b = loop[(i + 1) % loop.length];
 
-      const triangles: Array<Triangle> = [
-        { indices: [frontCurrent, backCurrent, backNext] },
-        { indices: [frontCurrent, backNext, frontNext] },
-      ];
+      const frontA = indexMap.get(key(a));
+      const frontB = indexMap.get(key(b));
+
+      if (frontA === undefined || frontB === undefined) {
+        throw new Error("Vertex not found in merged shape");
+      }
+
+      const backA = frontA + backOffset;
+      const backB = frontB + backOffset;
 
       faces.push({
-        face: i + 2,
-        triangles,
+        face: faces.length + 2,
+        triangles: [{ indices: [frontA, backA, backB] }, { indices: [frontA, backB, frontB] }],
       });
     }
 
     return faces;
   }
 
+  /* ───────────────────────── Utilities ───────────────────────── */
+
+  function buildIndexMap(vertices: Vector[]): Map<string, number> {
+    const map = new Map<string, number>();
+    vertices.forEach((v, i) => map.set(key(v), i));
+    return map;
+  }
+
+  function key(v: Vector): string {
+    return `${v.x}|${v.y}|${v.z}`;
+  }
+
   /**
-   * Calculates the bounding box dimensions of a set of vertices.
+   * Calculates bounding box dimensions.
    */
-  export function computeDimensions(vertices: Array<Vector>) {
+  export function computeDimensions(vertices: Vector[]) {
     const bounds = vertices.reduce(
-      (acc, vertex) => ({
-        minX: Math.min(acc.minX, vertex.x),
-        minY: Math.min(acc.minY, vertex.y),
-        minZ: Math.min(acc.minZ, vertex.z),
-        maxX: Math.max(acc.maxX, vertex.x),
-        maxY: Math.max(acc.maxY, vertex.y),
-        maxZ: Math.max(acc.maxZ, vertex.z),
+      (acc, v) => ({
+        minX: Math.min(acc.minX, v.x),
+        minY: Math.min(acc.minY, v.y),
+        minZ: Math.min(acc.minZ, v.z),
+        maxX: Math.max(acc.maxX, v.x),
+        maxY: Math.max(acc.maxY, v.y),
+        maxZ: Math.max(acc.maxZ, v.z),
       }),
       {
         minX: Infinity,
