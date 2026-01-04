@@ -7,8 +7,8 @@ import { Animation, AnimationExecutor } from "../animation";
 import { Mesh } from "../mesh";
 
 export interface EngineRenderParams {
-  pixelDensity: number;
-  pixelSize: number;
+  pixelDensity?: number;
+  pixelSize?: number;
 }
 
 const DEFAULT_PIXEL_DENSITY = 8;
