@@ -65,9 +65,6 @@ export function earcut(vertices: Array<Vector>): Array<Triangle> {
     }
   }
 
-  console.log(vertices);
-  console.log(ears);
-
   const triangles: Array<Triangle> = [];
   let remaining = n;
 

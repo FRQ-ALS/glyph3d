@@ -7,8 +7,6 @@ type HoleBridge = {
   bridge: Vector[];
 };
 
-/* ───────────────────────── Public API ───────────────────────── */
-
 export function bridgeHolesToBoundary(outer: Vector[], holes: Vector[][]): Vector[] {
   const bridges = holes
     .map((hole) => computeHoleBridge(hole, outer))
@@ -22,8 +20,6 @@ export function bridgeHolesToBoundary(outer: Vector[], holes: Vector[][]): Vecto
 
   return result;
 }
-
-/* ─────────────────────── Bridge Construction ─────────────────────── */
 
 function computeHoleBridge(hole: Vector[], outer: Vector[]): HoleBridge {
   TriangulationUtils.ensureWinding(hole, "CW");
@@ -45,8 +41,6 @@ function rotatedLoopFrom(vertices: Vector[], start: Vector): Vector[] {
   // explicit copy — no magic clone
   return [...rotated, new Vector(start.x, start.y, start.z)];
 }
-
-/* ───────────────────────── Visibility Logic ───────────────────────── */
 
 function findVisibleOuterVertex(m: Vector, outer: Vector[]): Vector {
   const rayEnd = new Vector(rightmostVertex(outer).x + VectorMath.EPSILON, m.y, 0);
@@ -73,8 +67,6 @@ function findVisibleOuterVertex(m: Vector, outer: Vector[]): Vector {
 
   throw new Error("No mutually visible vertex found");
 }
-
-/* ───────────────────────── Geometry Primitives ───────────────────────── */
 
 function intersect(a: Vector, b: Vector, c: Vector, d: Vector): Vector {
   const { x, y } = TriangulationUtils.findLineIntersection(a, b, c, d);
@@ -107,7 +99,6 @@ function smallestAngleFrom(m: Vector, i: Vector, vertices: Vector[]): Vector {
   );
 }
 
-/* ───────────────────────── Utility ───────────────────────── */
 
 function rightmostVertex(vertices: Vector[]): Vector {
   return vertices.reduce((a, b) => (b.x > a.x ? b : a));
