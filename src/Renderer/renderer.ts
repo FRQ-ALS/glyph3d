@@ -43,17 +43,27 @@ export class Renderer {
     this.resolveAndRender(ctx);
   }
 
-  public renderFaces(transformedVertices: Array<Vector>, faces: Face[], camera: Camera) {
+  public renderFaces(
+    transformedVertices: Array<Vector>,
+    faces: Face[],
+    camera: Camera,
+    color: string
+  ) {
     // Collect all pixels into buffer (accumulates across multiple renderFaces calls)
     faces.forEach((face: Face) => {
-      this.collectFacePixels(transformedVertices, face, camera);
+      this.collectFacePixels(transformedVertices, face, camera, color);
     });
   }
 
   /**
    * Collect all pixels from a single face into the pixel buffer
    */
-  private collectFacePixels(transformedVertices: Array<Vector>, face: Face, camera: Camera) {
+  private collectFacePixels(
+    transformedVertices: Array<Vector>,
+    face: Face,
+    camera: Camera,
+    color: string
+  ) {
     const getVerts = (t: Triangle) => t.indices.map((i) => transformedVertices[i]);
 
     // Process triangles - collect pixels without rendering
@@ -71,7 +81,7 @@ export class Renderer {
       }
 
       // Collect pixels from this triangle
-      this.collectTrianglePixels(v0, v1, v2, face.face);
+      this.collectTrianglePixels(v0, v1, v2, face.face, color);
     });
   }
 
@@ -98,14 +108,19 @@ export class Renderer {
    * Collect pixels from a triangle using scan-line algorithm
    * Each face gets a unique character based on its index
    */
-  private collectTrianglePixels(v0: Vector, v1: Vector, v2: Vector, faceIndex: number) {
+  private collectTrianglePixels(
+    v0: Vector,
+    v1: Vector,
+    v2: Vector,
+    faceIndex: number,
+    color: string
+  ) {
     // Sort vertices by Y coordinate (top to bottom)
     let vertices = [v0, v1, v2].sort((a, b) => a.y - b.y);
     const [top, mid, bot] = vertices;
 
-    // Get character and color for this specific face
+    // Get character for this specific face
     const char = this.getCharForFace(faceIndex);
-    const color = this.getColorForFace(faceIndex);
 
     // Rasterize triangle using scan-line algorithm
     this.rasterizeTriangleToBuffer(top, mid, bot, char, color, faceIndex);
@@ -118,28 +133,6 @@ export class Renderer {
   private getCharForFace(faceIndex: number): string {
     const faceChars = ["@", "#", "=", ".", "+", "*"];
     return faceChars[faceIndex] || "?";
-  }
-
-  /**
-   * Assign a unique color to each face (optional, can keep same color)
-   */
-  private getColorForFace(faceIndex: number): string {
-    // OR use different colors per face:
-    const faceColors = [
-      "#fb4934",
-      "#fb4934", // Front - red
-      "#b8bb26",
-      "#b8bb26", // Back - green
-      "#fabd2f",
-      "#fabd2f", // Top - yellow
-      "#83a598",
-      "#83a598", // Bottom - blue
-      "#d3869b",
-      "#d3869b", // Right - purple
-      "#fe8019",
-      "#fe8019", // Left - orange
-    ];
-    return faceColors[faceIndex] || "#fb4934";
   }
 
   /**

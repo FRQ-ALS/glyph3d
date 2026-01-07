@@ -17,7 +17,8 @@ export class Mesh {
     private _scene: Scene,
     private _faces: Array<Face>,
     private _pitch: number = 0,
-    private _yaw: number = 0
+    private _yaw: number = 0,
+    private _color: string = "#fb4934"
   ) {
     this.scene.addMesh(this);
     this.generateMeshDimensions();
@@ -70,6 +71,14 @@ export class Mesh {
   }
   set z(z: number) {
     this.moveMeshTo("z", z);
+  }
+
+  set color(color: string) {
+    this._color = color;
+  }
+
+  get color() {
+    return this._color;
   }
 
   private moveMeshTo(direction: "x" | "y" | "z", target: number) {
