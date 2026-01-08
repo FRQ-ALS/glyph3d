@@ -52,7 +52,7 @@ export class Animation {
         const nextValue =
           this.keyframes[next][prop as AnimatedProperty] ??
           this.keyframes[current][prop as AnimatedProperty];
-          
+
         const frameMovement = (nextValue as number) * factor;
         frames.push({
           property: prop as AnimatedProperty,
@@ -194,10 +194,20 @@ export class AnimationExecutor {
   }
 
   static rotate(frame: AnimationPathFrame, mesh: Mesh) {
-    mesh[frame.property] = frame.value;
+    if (frame.property === "pitch") {
+      mesh.pitch = frame.value;
+    } else if (frame.property === "yaw") {
+      mesh.yaw = frame.value;
+    }
   }
 
   static translate(frame: AnimationPathFrame, mesh: Mesh) {
-    mesh[frame.property] = frame.value;
+    if (frame.property === "x") {
+      mesh.x = frame.value;
+    } else if (frame.property === "y") {
+      mesh.y = frame.value;
+    } else if (frame.property === "z") {
+      mesh.z = frame.value;
+    }
   }
 }
