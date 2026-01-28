@@ -130,8 +130,3 @@ scene.backgroundColor = "black";
 engine.dispose();
 ```
 
----
-
-## License
-
-MIT
