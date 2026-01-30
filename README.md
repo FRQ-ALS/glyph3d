@@ -45,7 +45,7 @@ const cube = MeshBuilder.Cube("cube", scene, {
 Create 3D shapes from 2D outlines. Supports holes.
 
 ```typescript
-// Define a square outline
+// Define a square outline. Must be wound counter-clockwise
 const shape = [
   new Vector(0, 0, 0),
   new Vector(50, 0, 0),
@@ -53,7 +53,7 @@ const shape = [
   new Vector(0, 50, 0),
 ];
 
-// Optional: cut a hole (must be wound in reverse)
+// Optional: cut a hole (must be wound in reverse to vertices)
 const hole = [
   new Vector(10, 10, 0),
   new Vector(10, 40, 0),
@@ -85,7 +85,7 @@ const camera = new Camera("cam", scene, 0, 0, new Vector(0, 0, 200));
 Orbits around a target point. Supports mouse interaction.
 
 ```typescript
-const camera = new RotateCamera("cam", scene, 0, 0, new Vector(0, 0, 0), 300);
+const camera = new RotateCamera("cam", scene, 0, 0, new Vector(0, 0, 0), 300); // Last argument defines distance from focal point
 camera.attachControl(canvas);
 ```
 
@@ -101,17 +101,16 @@ Keyframe-based, similar to CSS animations.
 mesh.animate(new Animation(
   2000,       // duration ms
   0,          // delay ms
-  "ease",     // "ease" | "linear"
+  "ease",     // "ease" | "linear" (currently does nothing, yet to be implmented)
   "infinite", // iterations (number or "infinite")
   {
     0:   { yaw: 0, pitch: 0 },
-    50:  { yaw: Math.PI },
     100: { yaw: Math.PI * 2, pitch: Math.PI },
   }
 ));
 ```
 
-Properties: `yaw`, `pitch`, `roll`
+Properties: `yaw`, `pitch`
 
 ---
 
