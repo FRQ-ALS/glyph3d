@@ -1,7 +1,7 @@
 import { toCanvasFromCartesian } from "src/spatial";
 import { Vector } from "src/vector";
 
-describe("normalizeOriginToAnchor", () => {
+describe("toCanvasFromCartesian", () => {
   const clientWidth = 100,
     clientHeight = 100;
 
