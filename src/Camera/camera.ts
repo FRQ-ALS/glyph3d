@@ -21,7 +21,7 @@ export class Camera {
     protected pitch: number,
     protected yaw: number,
     protected origin: Vector,
-    protected sensitiviy?: number
+    protected sensitivity?: number
   ) {
     scene.activeCamera = this;
     // Only set location if instantiating base Camera, not subclasses
@@ -30,8 +30,8 @@ export class Camera {
     }
   }
 
-  public setSensitiviy(sensitiviy: number) {
-    this.sensitiviy = sensitiviy;
+  public setSensitivity(sensitivity: number) {
+    this.sensitivity = sensitivity;
   }
 
   public getCurrentLocation(): Vector | undefined {

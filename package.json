@@ -1,7 +1,7 @@
 {
   "name": "glyph3d",
   "version": "1.0.6",
-  "description": "",
+  "description": "A 3D engine that renders with ASCII characters instead of pixels.",
   "main": "dist/src/index.js",
   "module": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -12,17 +12,37 @@
       "default": "./dist/src/index.js"
     }
   },
+  "files": [
+    "dist/src"
+  ],
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prepare": "npm run build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "3d",
+    "ascii",
+    "rendering",
+    "engine",
+    "canvas",
+    "graphics",
+    "typescript"
+  ],
+  "author": "FRQ-ALS <farooqalsaadi0@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FRQ-ALS/glyph3d.git"
+  },
+  "homepage": "https://github.com/FRQ-ALS/glyph3d#readme",
+  "bugs": {
+    "url": "https://github.com/FRQ-ALS/glyph3d/issues"
+  },
   "type": "module",
   "devDependencies": {
     "@types/jest": "^30.0.0",

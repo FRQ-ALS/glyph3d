@@ -10,7 +10,7 @@ export class FreeLookCamera extends Camera {
     protected pitch: number,
     protected yaw: number,
     protected origin: Vector,
-    protected sensitiviy?: number
+    protected sensitivity?: number
   ) {
     super(name, scene, pitch, yaw, origin);
     this.currentLocation = origin;
