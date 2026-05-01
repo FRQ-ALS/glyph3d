@@ -1,6 +1,7 @@
 import { Renderer } from "../renderer";
 import { Transformer } from "../transformer";
 import type { Scene } from "../scene";
+import { Camera } from "../camera";
 import { getPixelDensity } from "../screen/getPixelDensity";
 import { AnimationState } from "../animation/animation.types";
 import { Animation, AnimationExecutor } from "../animation";
@@ -8,20 +9,22 @@ import { Mesh } from "../mesh";
 
 export interface EngineRenderParams {
   pixelDensity?: number;
-  pixelSize?: number;
 }
 
 const DEFAULT_PIXEL_DENSITY = 8;
-const DEFAULT_PIXEL_SIZE = 6;
+const BASE_PIXEL_SIZE = 6;
 const DEFAULT_BACKGROUND_COLOR = "#faf5f5";
 const DEFAULT_DPR = 2;
+const MAX_PIXEL_SIZE = 64;
 
 export class Engine {
   readonly canvas: HTMLCanvasElement;
   readonly pixelDensity: number;
-  readonly pixelSize: number;
   readonly clientHeight: number;
   readonly clientWidth: number;
+
+  private pixelSize: number = BASE_PIXEL_SIZE;
+  private referenceViewDistance: number | null = null;
 
   private readonly ctx: CanvasRenderingContext2D;
   private readonly renderer: Renderer;
@@ -33,7 +36,6 @@ export class Engine {
   constructor(canvas: HTMLCanvasElement, params?: EngineRenderParams) {
     this.canvas = canvas;
     this.pixelDensity = params?.pixelDensity ?? DEFAULT_PIXEL_DENSITY;
-    this.pixelSize = params?.pixelSize ?? DEFAULT_PIXEL_SIZE;
     this.clientHeight = canvas.clientHeight;
     this.clientWidth = canvas.clientWidth;
 
@@ -113,17 +115,19 @@ export class Engine {
    * Renders a scene to the canvas
    */
   draw(scene: Scene): void {
+    const camera = scene.activeCamera;
+    if (!camera) {
+      console.warn("Cannot render scene: camera is undefined. Please add a camera to the scene.");
+      return;
+    }
+
+    this.adjustPixelSizeForCamera(camera);
     this.ctx.font = `${this.pixelSize}px monospace`;
 
     this.clearCanvas();
     this.renderer.clearZBuffer();
     this.renderer.clearPixelBuffer();
 
-    const camera = scene.activeCamera;
-    if (!camera) {
-      console.warn("Cannot render scene: camera is undefined. Please add a camera to the scene.");
-      return;
-    }
     if (scene.backgroundColor) {
       this.fillBackground(scene.backgroundColor);
     }
@@ -134,6 +138,27 @@ export class Engine {
     }
 
     this.renderer.flushPixelBuffer(this.ctx);
+  }
+
+  private adjustPixelSizeForCamera(camera: Camera): void {
+    const viewDistance = camera.getViewDistance();
+    if (viewDistance == null || viewDistance <= 0) return;
+
+    if (this.referenceViewDistance === null) {
+      this.referenceViewDistance = viewDistance;
+      return;
+    }
+
+    const target = BASE_PIXEL_SIZE * (this.referenceViewDistance / viewDistance);
+    const floored = Math.max(BASE_PIXEL_SIZE, target);
+    const clamped = Math.min(MAX_PIXEL_SIZE, Math.round(floored));
+    this.setPixelSize(clamped);
+  }
+
+  private setPixelSize(size: number): void {
+    if (size === this.pixelSize) return;
+    this.pixelSize = size;
+    this.renderer.setPixelSize(size);
   }
 
   /**

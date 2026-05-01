@@ -29,6 +29,12 @@ export class Renderer {
       .map(() => Array(cols).fill(Infinity));
   }
 
+  public setPixelSize(size: number) {
+    if (size === this.pixelSize) return;
+    this.pixelSize = size;
+    this.initZBuffer();
+  }
+
   public clearZBuffer() {
     for (let i = 0; i < this.zBuffer.length; i++) {
       for (let j = 0; j < this.zBuffer[i].length; j++) {
@@ -185,8 +191,14 @@ export class Renderer {
   ) {
     if (left.x > right.x) [left, right] = [right, left];
 
-    const yStart = Math.round(top.y / this.pixelSize) * this.pixelSize;
-    const yEnd = Math.round(left.y / this.pixelSize) * this.pixelSize;
+    const yStart = Math.max(
+      0,
+      Math.round(top.y / this.pixelSize) * this.pixelSize
+    );
+    const yEnd = Math.min(
+      this.clientHeight,
+      Math.round(left.y / this.pixelSize) * this.pixelSize
+    );
 
     for (let y = yStart; y <= yEnd; y += this.pixelSize) {
       const t = (y - top.y) / (left.y - top.y);
@@ -211,8 +223,14 @@ export class Renderer {
   ) {
     if (left.x > right.x) [left, right] = [right, left];
 
-    const yStart = Math.round(left.y / this.pixelSize) * this.pixelSize;
-    const yEnd = Math.round(bot.y / this.pixelSize) * this.pixelSize;
+    const yStart = Math.max(
+      0,
+      Math.round(left.y / this.pixelSize) * this.pixelSize
+    );
+    const yEnd = Math.min(
+      this.clientHeight,
+      Math.round(bot.y / this.pixelSize) * this.pixelSize
+    );
 
     for (let y = yStart; y <= yEnd; y += this.pixelSize) {
       const t = (y - left.y) / (bot.y - left.y);
@@ -237,11 +255,14 @@ export class Renderer {
     color: string,
     faceIndex: number
   ) {
-    const xStart = Math.round(xLeft / this.pixelSize) * this.pixelSize;
-    const xEnd = Math.round(xRight / this.pixelSize) * this.pixelSize;
+    const origXStart = Math.round(xLeft / this.pixelSize) * this.pixelSize;
+    const origXEnd = Math.round(xRight / this.pixelSize) * this.pixelSize;
+    const xStart = Math.max(0, origXStart);
+    const xEnd = Math.min(this.clientWidth, origXEnd);
+    const xRange = origXEnd - origXStart;
 
     for (let x = xStart; x <= xEnd; x += this.pixelSize) {
-      const t = xEnd - xStart === 0 ? 0 : (x - xStart) / (xEnd - xStart);
+      const t = xRange === 0 ? 0 : (x - origXStart) / xRange;
       const z = zLeft + (zRight - zLeft) * t;
 
       const gridX = Math.floor(x / this.pixelSize);

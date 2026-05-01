@@ -62,6 +62,10 @@ export class Camera {
     return this.origin;
   }
 
+  public getViewDistance(): number | null {
+    return null;
+  }
+
   public setOrigin(vector: Vector): void {
     this.origin = vector;
   }

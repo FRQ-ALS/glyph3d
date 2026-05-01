@@ -29,6 +29,10 @@ export class RotateCamera extends Camera {
     this.calcLocation(yaw, pitch);
   }
 
+  public getViewDistance(): number {
+    return this.radius;
+  }
+
   /**
    * Converts spherical coords (pitch, yaw, radius) to cartesian position.
    * Pitch is clamped slightly to avoid gimbal lock at poles.
