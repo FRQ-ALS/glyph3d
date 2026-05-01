@@ -20,7 +20,7 @@ export class FreeLookCamera extends Camera {
     this.focusCanvas(canvas);
 
     const MOVE_BY: number = 10;
-    var originalPosition: { x: number; y: number } | undefined = undefined;
+    let originalPosition: { x: number; y: number } | undefined = undefined;
 
     // TODO: Update this to take into account camera rotation
     canvas.addEventListener("keydown", (event) => {

@@ -130,7 +130,7 @@ export function earcut(vertices: Array<Vector>): Array<Triangle> {
   }
   // Add final triangle
   if (remaining === 3) {
-    let current = Array.from(ears)[0];
+    const current = Array.from(ears)[0];
 
     const v0 = current;
     const v1 = nodes[v0].next;

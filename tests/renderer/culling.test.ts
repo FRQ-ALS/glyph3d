@@ -78,32 +78,20 @@ describe("Renderer.isFacingCamera (screen-space cross product sign)", () => {
   const r: any = new Renderer(6, 100, 100);
 
   test("positive cross product (CCW in canvas-Y-down) returns true", () => {
-    expect(
-      r.isFacingCamera(
-        new Vector(0, 0, 0),
-        new Vector(10, 0, 0),
-        new Vector(0, 10, 0)
-      )
-    ).toBe(true);
+    expect(r.isFacingCamera(new Vector(0, 0, 0), new Vector(10, 0, 0), new Vector(0, 10, 0))).toBe(
+      true
+    );
   });
 
   test("negative cross product (reversed winding) returns false", () => {
-    expect(
-      r.isFacingCamera(
-        new Vector(0, 0, 0),
-        new Vector(0, 10, 0),
-        new Vector(10, 0, 0)
-      )
-    ).toBe(false);
+    expect(r.isFacingCamera(new Vector(0, 0, 0), new Vector(0, 10, 0), new Vector(10, 0, 0))).toBe(
+      false
+    );
   });
 
   test("collinear (degenerate) triangle returns false", () => {
-    expect(
-      r.isFacingCamera(
-        new Vector(0, 0, 0),
-        new Vector(10, 0, 0),
-        new Vector(20, 0, 0)
-      )
-    ).toBe(false);
+    expect(r.isFacingCamera(new Vector(0, 0, 0), new Vector(10, 0, 0), new Vector(20, 0, 0))).toBe(
+      false
+    );
   });
 });

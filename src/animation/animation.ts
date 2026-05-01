@@ -1,6 +1,5 @@
 import {
   Keyframes,
-  Keyframe,
   AnimationTiming,
   AnimationIterationCount,
   AnimationState,

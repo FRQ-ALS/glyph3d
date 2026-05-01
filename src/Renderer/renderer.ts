@@ -99,11 +99,7 @@ export class Renderer {
 
     const intersect = (vIn: Vector, vOut: Vector): Vector => {
       const t = (NEAR - vIn.z) / (vOut.z - vIn.z);
-      return new Vector(
-        vIn.x + (vOut.x - vIn.x) * t,
-        vIn.y + (vOut.y - vIn.y) * t,
-        NEAR
-      );
+      return new Vector(vIn.x + (vOut.x - vIn.x) * t, vIn.y + (vOut.y - vIn.y) * t, NEAR);
     };
 
     if (insideCount === 1) {
@@ -145,7 +141,7 @@ export class Renderer {
     faceIndex: number,
     color: string
   ) {
-    let vertices = [v0, v1, v2].sort((a, b) => a.y - b.y);
+    const vertices = [v0, v1, v2].sort((a, b) => a.y - b.y);
     const [top, mid, bot] = vertices;
 
     const char = this.getCharForFace(faceIndex);
@@ -191,14 +187,8 @@ export class Renderer {
   ) {
     if (left.x > right.x) [left, right] = [right, left];
 
-    const yStart = Math.max(
-      0,
-      Math.round(top.y / this.pixelSize) * this.pixelSize
-    );
-    const yEnd = Math.min(
-      this.clientHeight,
-      Math.round(left.y / this.pixelSize) * this.pixelSize
-    );
+    const yStart = Math.max(0, Math.round(top.y / this.pixelSize) * this.pixelSize);
+    const yEnd = Math.min(this.clientHeight, Math.round(left.y / this.pixelSize) * this.pixelSize);
 
     for (let y = yStart; y <= yEnd; y += this.pixelSize) {
       const t = (y - top.y) / (left.y - top.y);
@@ -223,14 +213,8 @@ export class Renderer {
   ) {
     if (left.x > right.x) [left, right] = [right, left];
 
-    const yStart = Math.max(
-      0,
-      Math.round(left.y / this.pixelSize) * this.pixelSize
-    );
-    const yEnd = Math.min(
-      this.clientHeight,
-      Math.round(bot.y / this.pixelSize) * this.pixelSize
-    );
+    const yStart = Math.max(0, Math.round(left.y / this.pixelSize) * this.pixelSize);
+    const yEnd = Math.min(this.clientHeight, Math.round(bot.y / this.pixelSize) * this.pixelSize);
 
     for (let y = yStart; y <= yEnd; y += this.pixelSize) {
       const t = (y - left.y) / (bot.y - left.y);

@@ -42,12 +42,7 @@ describe("Renderer.renderFaces end-to-end", () => {
       new Vector(5, 0, -2),
     ];
 
-    r.renderFaces(
-      verts,
-      [triFace(0, 1, 2, 0), triFace(3, 4, 5, 1)],
-      cam,
-      "blue"
-    );
+    r.renderFaces(verts, [triFace(0, 1, 2, 0), triFace(3, 4, 5, 1)], cam, "blue");
 
     const { ctx, fillTextCalls } = makeFakeCanvas();
     r.flushPixelBuffer(ctx as any);
@@ -77,11 +72,7 @@ describe("Renderer.renderFaces end-to-end", () => {
   test("triangle straddling the near plane gets clipped without OOM, and produces bounded output", () => {
     const r = new Renderer(4, 200, 200);
     const cam = fakeCamera({ location: new Vector(0, 0, 0) });
-    const cameraSpaceVertices = [
-      new Vector(-5, -5, -2),
-      new Vector(5, -5, 2),
-      new Vector(0, 5, 2),
-    ];
+    const cameraSpaceVertices = [new Vector(-5, -5, -2), new Vector(5, -5, 2), new Vector(0, 5, 2)];
 
     expect(() => {
       r.renderFaces(cameraSpaceVertices, [triFace(0, 1, 2)], cam, "red");

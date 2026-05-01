@@ -1,1 +1,1 @@
-export const ASCII_CHARACTERS = [' ', '.', '-', '+', '#'];
+export const ASCII_CHARACTERS = [" ", ".", "-", "+", "#"];

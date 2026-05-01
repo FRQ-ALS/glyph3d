@@ -39,7 +39,7 @@ export class RotateCamera extends Camera {
    */
   private calcLocation(yaw: number, pitch: number): void {
     // Start with camera behind target
-    let offset = new Vector(0, 0, this.radius);
+    const offset = new Vector(0, 0, this.radius);
 
     // Rotate around X-axis (pitch)
     const { y2: y1, z2: z1 } = rotateAroundXAxis(offset.y, offset.z, pitch);

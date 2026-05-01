@@ -5,7 +5,7 @@ import { TriangulationUtils } from "./utils";
 export function bridgeHolesToBoundary(outer: Vector[], holes: Vector[][]): Vector[] {
   if (holes.length === 0) return [...outer];
 
-  let result = [...outer];
+  const result = [...outer];
   TriangulationUtils.ensureWinding(result, "CCW");
 
   // Sort holes by rightmost vertex x-coordinate (rightmost first)

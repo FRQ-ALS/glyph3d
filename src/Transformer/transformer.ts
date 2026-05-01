@@ -9,7 +9,10 @@ export class Transformer {
   public fieldOfViewRadians: number = 0;
   public focalLength: number = 0;
 
-  constructor(private canvasWidth: number, private canvasHeight: number) {
+  constructor(
+    private canvasWidth: number,
+    private canvasHeight: number
+  ) {
     this.fieldOfViewRadians = (this.fieldOfViewDegrees * Math.PI) / 180;
     this.focalLength = this.canvasWidth / 2 / Math.tan(this.fieldOfViewRadians / 2);
   }

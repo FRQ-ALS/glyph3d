@@ -4,10 +4,7 @@
  * @returns The device pixel ratio, or `null` if unavailable.
  */
 export function getPixelDensity(fallback: number = 1): number {
-  if (
-    typeof window === "undefined" ||
-    typeof window.devicePixelRatio !== "number"
-  ) {
+  if (typeof window === "undefined" || typeof window.devicePixelRatio !== "number") {
     return fallback;
   }
 

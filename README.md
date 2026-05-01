@@ -7,6 +7,7 @@ Read about how it works: [frq.world/blog/glyph3d](https://frq.world/blog/glyph3d
 ```bash
 npm install glyph3d
 ```
+
 ```typescript
 import { Engine, Scene, MeshBuilder, Camera, Animation, Vector } from "glyph3d";
 const engine = new Engine(canvas);
@@ -17,23 +18,32 @@ const cube = MeshBuilder.Cube("cube", scene, {
   size: 50,
 });
 cube.color = "#00ff00";
-cube.animate(new Animation(2000, 0, "ease", "infinite", {
-  0: { yaw: 0 },
-  100: { yaw: Math.PI * 2 },
-}));
+cube.animate(
+  new Animation(2000, 0, "ease", "infinite", {
+    0: { yaw: 0 },
+    100: { yaw: Math.PI * 2 },
+  })
+);
 engine.runRenderLoop(() => scene.render());
 ```
+
 ---
+
 ## Meshes
+
 ### Cube
+
 ```typescript
 const cube = MeshBuilder.Cube("cube", scene, {
   position: { x: 0, y: 0, z: 0 },
   size: 50,
 });
 ```
+
 ### Extrude
+
 Create 3D shapes from 2D outlines. Supports holes.
+
 ```typescript
 // Define a square outline. Must be wound counter-clockwise
 const shape = [
@@ -55,44 +65,62 @@ const frame = MeshBuilder.Extrude("frame", scene, {
   depth: 20,
 });
 ```
+
 ---
+
 ## Cameras
+
 ### Camera
+
 Static camera. Good for watching animations.
+
 ```typescript
 const camera = new Camera("cam", scene, 0, 0, new Vector(0, 0, 200));
 ```
+
 ### RotateCamera
+
 Orbits around a target point. Supports mouse interaction.
+
 ```typescript
 const camera = new RotateCamera("cam", scene, 0, 0, new Vector(0, 0, 0), 300); // Last argument defines distance from focal point
 camera.attachControl(canvas);
 ```
-The last parameter is the orbital distance from the target.
----
+
+## The last parameter is the orbital distance from the target.
+
 ## Animation
+
 Keyframe-based, similar to CSS animations.
+
 ```typescript
-mesh.animate(new Animation(
-  2000,       // duration ms
-  0,          // delay ms
-  "ease",     // "ease" | "linear" (currently does nothing, yet to be implmented)
-  "infinite", // iterations (number or "infinite")
-  {
-    0:   { yaw: 0, pitch: 0 },
-    100: { yaw: Math.PI * 2, pitch: Math.PI },
-  }
-));
+mesh.animate(
+  new Animation(
+    2000, // duration ms
+    0, // delay ms
+    "ease", // "ease" | "linear" (currently does nothing, yet to be implmented)
+    "infinite", // iterations (number or "infinite")
+    {
+      0: { yaw: 0, pitch: 0 },
+      100: { yaw: Math.PI * 2, pitch: Math.PI },
+    }
+  )
+);
 ```
-Properties: `yaw`, `pitch`
----
+
+## Properties: `yaw`, `pitch`
+
 ## Scene
+
 ```typescript
 const scene = new Scene(engine);
 scene.backgroundColor = "black";
 ```
+
 ---
+
 ## Cleanup
+
 ```typescript
 engine.dispose();
 ```
