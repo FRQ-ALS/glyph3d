@@ -2,7 +2,7 @@ import { Camera } from "src/camera";
 import { Vector } from "../vector";
 import { Mesh } from "../mesh";
 import { rotateAroundXAxis, rotateAroundYAxis } from "../spatial";
-import { toCanvasFromCartesian, normalizeOriginToAnchor } from "../spatial/geometry";
+import { toCanvasFromCartesian } from "../spatial/geometry";
 
 export class Transformer {
   public fieldOfViewDegrees: number = 120;
@@ -14,22 +14,26 @@ export class Transformer {
     this.focalLength = this.canvasWidth / 2 / Math.tan(this.fieldOfViewRadians / 2);
   }
 
-  /**
-   * Transform all vertices through the full rendering pipeline:
-   * WORLD SPACE → CAMERA SPACE → VIEW SPACE → PROJECTION → SCREEN SPACE
-   */
   public transformVertices(mesh: Mesh, camera: Camera): Vector[] {
-    const localSpace = mesh.resolveLocalMovement();
-    const cameraSpaceVertices = this.translateToWorldSpace(localSpace, camera);
-    const viewSpaceVertices = this.applyViewTransformation(cameraSpaceVertices, camera);
-    const screenSpaceVertices = this.convertToScreenSpace(viewSpaceVertices);
-
-    return screenSpaceVertices;
+    const cameraSpaceVertices = this.toCameraSpace(mesh, camera);
+    return cameraSpaceVertices.map((v) => this.projectToScreen(v));
   }
 
-  /**
-   * Step 1: Translate vertices from world space to camera space
-   */
+  public toCameraSpace(mesh: Mesh, camera: Camera): Vector[] {
+    const localSpace = mesh.resolveLocalMovement();
+    const translated = this.translateToWorldSpace(localSpace, camera);
+    return translated.map((v) => this.applyCameraRotation(v, camera));
+  }
+
+  public projectToScreen(vertex: Vector): Vector {
+    const projected = this.applyPerspectiveProjection(vertex);
+    const screen = toCanvasFromCartesian(projected, {
+      clientHeight: this.canvasHeight,
+      clientWidth: this.canvasWidth,
+    });
+    return new Vector(screen.x, screen.y, screen.z);
+  }
+
   private translateToWorldSpace(vertices: Vector[], camera: Camera): Vector[] {
     const cameraPosition = camera.getCurrentLocation();
     if (!cameraPosition) return [];
@@ -37,9 +41,6 @@ export class Transformer {
     return vertices.map((vertex: Vector) => this.subtractCameraPosition(vertex, cameraPosition));
   }
 
-  /**
-   * Subtract camera position from a vertex to get camera-relative coordinates
-   */
   private subtractCameraPosition(vertex: Vector, cameraPosition: Vector): Vector {
     return new Vector(
       vertex.x - cameraPosition.x,
@@ -48,67 +49,17 @@ export class Transformer {
     );
   }
 
-  /**
-   * Step 2: Apply camera rotation and perspective projection
-   */
-  private applyViewTransformation(vertices: Vector[], camera: Camera): Vector[] {
-    return vertices.map((vertex) => this.transformToViewSpace(vertex, camera));
-  }
-
-  /**
-   * Transform a single vertex: rotate by camera orientation and apply perspective
-   * CAMERA SPACE → VIEW SPACE → PROJECTION
-   */
-  private transformToViewSpace(vertex: Vector, camera: Camera): Vector {
-    const rotatedVertex = this.applyCameraRotation(vertex, camera);
-    const projectedVertex = this.applyPerspectiveProjection(rotatedVertex);
-
-    return projectedVertex;
-  }
-
-  /**
-   * Rotate vertex based on camera pitch and yaw
-   */
   private applyCameraRotation(vertex: Vector, camera: Camera): Vector {
     const { pitch, yaw } = camera.getRotation();
-
-    // Apply yaw rotation (around Y axis)
     const { x1, z1 } = rotateAroundYAxis(vertex.x, vertex.z, -yaw);
-
-    // Apply pitch rotation (around X axis)
     const { y2, z2 } = rotateAroundXAxis(vertex.y, z1, -pitch);
-
     return new Vector(x1, y2, z2);
   }
 
-  /**
-   * Apply perspective projection using focal length
-   */
   private applyPerspectiveProjection(vertex: Vector): Vector {
-    const perspectiveScale = this.calculatePerspectiveScale(vertex.z);
-
+    const perspectiveScale = this.focalLength / -vertex.z;
     const projectedX = vertex.x * perspectiveScale;
     const projectedY = vertex.y * perspectiveScale;
-
     return new Vector(projectedX, projectedY, vertex.z);
-  }
-
-  /**
-   * Calculate perspective scale factor based on depth
-   */
-  private calculatePerspectiveScale(depth: number): number {
-    return this.focalLength / (this.focalLength - depth);
-  }
-
-  /**
-   * Step 3: Convert from view space to screen/canvas coordinates
-   */
-  private convertToScreenSpace(vertices: Vector[]): Vector[] {
-    return vertices.map((vertex: Vector) =>
-      toCanvasFromCartesian(vertex, {
-        clientHeight: this.canvasHeight,
-        clientWidth: this.canvasWidth,
-      })
-    );
   }
 }

@@ -10,6 +10,8 @@ export class Renderer {
   private pixelBuffer: Array<Pixel> = [];
   private transformer: Transformer;
 
+  private static readonly NEAR_Z = -0.01;
+
   constructor(
     private pixelSize: number,
     private clientWidth: number,
@@ -44,70 +46,92 @@ export class Renderer {
   }
 
   public renderFaces(
-    transformedVertices: Array<Vector>,
+    cameraSpaceVertices: Array<Vector>,
     faces: Face[],
     camera: Camera,
     color: string
   ) {
-    // Collect all pixels into buffer (accumulates across multiple renderFaces calls)
     faces.forEach((face: Face) => {
-      this.collectFacePixels(transformedVertices, face, camera, color);
+      this.collectFacePixels(cameraSpaceVertices, face, camera, color);
     });
   }
 
-  /**
-   * Collect all pixels from a single face into the pixel buffer
-   */
   private collectFacePixels(
-    transformedVertices: Array<Vector>,
+    cameraSpaceVertices: Array<Vector>,
     face: Face,
     camera: Camera,
     color: string
   ) {
-    const getVerts = (t: Triangle) => t.indices.map((i) => transformedVertices[i]);
+    const getVerts = (t: Triangle) => t.indices.map((i) => cameraSpaceVertices[i]);
 
-    // Process triangles - collect pixels without rendering
-    face.triangles.forEach((t, faceIndex) => {
-      const [v0, v1, v2] = getVerts(t);
+    for (const t of face.triangles) {
+      const [cv0, cv1, cv2] = getVerts(t);
 
-      // Frustum culling
-      if (!this.applyFrustumCulling(v0, v1, v2, camera)) {
-        return;
+      const clippedTris = this.clipAgainstNearPlane(cv0, cv1, cv2);
+
+      for (const [a, b, c] of clippedTris) {
+        const v0 = this.transformer.projectToScreen(a);
+        const v1 = this.transformer.projectToScreen(b);
+        const v2 = this.transformer.projectToScreen(c);
+
+        if (!this.applyFrustumCulling(v0, v1, v2, camera)) continue;
+        if (!this.isFacingCamera(v0, v1, v2)) continue;
+
+        this.collectTrianglePixels(v0, v1, v2, face.face, color);
       }
-
-      // Backface culling
-      if (!this.isFacingCamera(v0, v1, v2)) {
-        return;
-      }
-
-      // Collect pixels from this triangle
-      this.collectTrianglePixels(v0, v1, v2, face.face, color);
-    });
+    }
   }
 
-  /**
-   * Check if a face is facing the camera using cross product
-   * In camera space, if the normal's Z component points toward camera (positive), it's a back face
-   */
+  private clipAgainstNearPlane(v0: Vector, v1: Vector, v2: Vector): Vector[][] {
+    const NEAR = Renderer.NEAR_Z;
+    const verts = [v0, v1, v2];
+    const inside = verts.map((v) => v.z < NEAR);
+    const insideCount = (inside[0] ? 1 : 0) + (inside[1] ? 1 : 0) + (inside[2] ? 1 : 0);
+
+    if (insideCount === 3) return [[v0, v1, v2]];
+    if (insideCount === 0) return [];
+
+    const intersect = (vIn: Vector, vOut: Vector): Vector => {
+      const t = (NEAR - vIn.z) / (vOut.z - vIn.z);
+      return new Vector(
+        vIn.x + (vOut.x - vIn.x) * t,
+        vIn.y + (vOut.y - vIn.y) * t,
+        NEAR
+      );
+    };
+
+    if (insideCount === 1) {
+      const inIdx = inside.findIndex((f) => f);
+      const vIn = verts[inIdx];
+      const vOut1 = verts[(inIdx + 1) % 3];
+      const vOut2 = verts[(inIdx + 2) % 3];
+      return [[vIn, intersect(vIn, vOut1), intersect(vIn, vOut2)]];
+    }
+
+    const outIdx = inside.findIndex((f) => !f);
+    const vOut = verts[outIdx];
+    const vIn1 = verts[(outIdx + 1) % 3];
+    const vIn2 = verts[(outIdx + 2) % 3];
+    const a = intersect(vIn1, vOut);
+    const b = intersect(vIn2, vOut);
+    return [
+      [a, vIn1, vIn2],
+      [a, vIn2, b],
+    ];
+  }
+
   private isFacingCamera(v0: Vector, v1: Vector, v2: Vector): boolean {
-    // Calculate two edge vectors
     const edge1x = v1.x - v0.x;
     const edge1y = v1.y - v0.y;
 
     const edge2x = v2.x - v0.x;
     const edge2y = v2.y - v0.y;
 
-    // Cross product (we only need Z component for backface test)
-    // If Z > 0, the face is counter-clockwise (front-facing in screen space)
     const crossZ = edge1x * edge2y - edge1y * edge2x;
 
     return crossZ > 0;
   }
 
-  /**
-   * Collect pixels from a triangle using scan-line algorithm
-   * Each face gets a unique character based on its index
-   */
   private collectTrianglePixels(
     v0: Vector,
     v1: Vector,
@@ -115,29 +139,19 @@ export class Renderer {
     faceIndex: number,
     color: string
   ) {
-    // Sort vertices by Y coordinate (top to bottom)
     let vertices = [v0, v1, v2].sort((a, b) => a.y - b.y);
     const [top, mid, bot] = vertices;
 
-    // Get character for this specific face
     const char = this.getCharForFace(faceIndex);
 
-    // Rasterize triangle using scan-line algorithm
     this.rasterizeTriangleToBuffer(top, mid, bot, char, color, faceIndex);
   }
 
-  /**
-   * Assign a unique character to each face of the cube
-   * Face order: 0-1: front, 2-3: back, 4-5: top, 6-7: bottom, 8-9: right, 10-11: left
-   */
   private getCharForFace(faceIndex: number): string {
     const faceChars = ["@", "#", "=", ".", "+", "*"];
     return faceChars[faceIndex] || "?";
   }
 
-  /**
-   * Rasterize triangle by scanning horizontal lines and adding to buffer
-   */
   private rasterizeTriangleToBuffer(
     top: Vector,
     mid: Vector,
@@ -146,29 +160,21 @@ export class Renderer {
     color: string,
     faceIndex: number
   ) {
-    // Handle flat triangles separately
     if (Math.abs(top.y - mid.y) < 0.01) {
       this.fillFlatTopTriangleToBuffer(top, mid, bot, char, color, faceIndex);
     } else if (Math.abs(mid.y - bot.y) < 0.01) {
       this.fillFlatBottomTriangleToBuffer(top, mid, bot, char, color, faceIndex);
     } else {
-      // Split into two triangles
-      // Find point on the long edge at mid.y
       const t = (mid.y - top.y) / (bot.y - top.y);
       const splitX = top.x + (bot.x - top.x) * t;
       const splitZ = top.z + (bot.z - top.z) * t;
       const split = new Vector(splitX, mid.y, splitZ);
 
-      // Draw top half (flat bottom)
       this.fillFlatBottomTriangleToBuffer(top, mid, split, char, color, faceIndex);
-      // Draw bottom half (flat top)
       this.fillFlatTopTriangleToBuffer(mid, split, bot, char, color, faceIndex);
     }
   }
 
-  /**
-   * Fill a flat-bottom triangle by adding pixels to buffer
-   */
   private fillFlatBottomTriangleToBuffer(
     top: Vector,
     left: Vector,
@@ -177,7 +183,6 @@ export class Renderer {
     color: string,
     faceIndex: number
   ) {
-    // Ensure left is actually on the left
     if (left.x > right.x) [left, right] = [right, left];
 
     const yStart = Math.round(top.y / this.pixelSize) * this.pixelSize;
@@ -196,9 +201,6 @@ export class Renderer {
     }
   }
 
-  /**
-   * Fill a flat-top triangle by adding pixels to buffer
-   */
   private fillFlatTopTriangleToBuffer(
     left: Vector,
     right: Vector,
@@ -207,7 +209,6 @@ export class Renderer {
     color: string,
     faceIndex: number
   ) {
-    // Ensure left is actually on the left
     if (left.x > right.x) [left, right] = [right, left];
 
     const yStart = Math.round(left.y / this.pixelSize) * this.pixelSize;
@@ -226,9 +227,6 @@ export class Renderer {
     }
   }
 
-  /**
-   * Collect pixels from a horizontal scan line into the buffer
-   */
   private collectScanLine(
     xLeft: number,
     xRight: number,
@@ -249,7 +247,6 @@ export class Renderer {
       const gridX = Math.floor(x / this.pixelSize);
       const gridY = Math.floor(y / this.pixelSize);
 
-      // Bounds check
       if (
         gridY < 0 ||
         gridY >= this.zBuffer.length ||
@@ -259,7 +256,6 @@ export class Renderer {
         continue;
       }
 
-      // Add to pixel buffer
       this.pixelBuffer.push({
         x,
         y,
@@ -273,11 +269,8 @@ export class Renderer {
     }
   }
 
-  /**
-   * Resolve depth conflicts and render only the closest pixels
-   */
   private resolveAndRender(ctx: CanvasRenderingContext2D) {
-    const Z_EPSILON = VectorMath.EPSILON; // Tolerance for z-fighting
+    const Z_EPSILON = VectorMath.EPSILON;
 
     this.pixelBuffer.sort((a, b) => {
       const gridCompare =
@@ -293,7 +286,6 @@ export class Renderer {
       return a.faceIndex - b.faceIndex;
     });
 
-    // Render only the closest pixel for each grid position
     let lastGridX = -1;
     let lastGridY = -1;
 
@@ -302,7 +294,6 @@ export class Renderer {
         continue;
       }
 
-      // Render this pixel
       ctx.fillStyle = pixel.color;
       ctx.fillText(pixel.char, pixel.x, pixel.y);
 

@@ -129,9 +129,8 @@ export class Engine {
     }
 
     for (const mesh of scene.meshes) {
-      // Takes care of rotation, translation etc
-      const transformedVertices = this.transformer.transformVertices(mesh, camera);
-      this.renderer.renderFaces(transformedVertices, mesh.faces, camera, mesh.color);
+      const cameraSpaceVertices = this.transformer.toCameraSpace(mesh, camera);
+      this.renderer.renderFaces(cameraSpaceVertices, mesh.faces, camera, mesh.color);
     }
 
     this.renderer.flushPixelBuffer(this.ctx);
