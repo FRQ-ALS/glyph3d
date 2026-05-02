@@ -7,11 +7,6 @@ import { AnimationState } from "../animation/animation.types";
 import { Animation, AnimationExecutor } from "../animation";
 import { Mesh } from "../mesh";
 
-export interface EngineRenderParams {
-  pixelDensity?: number;
-}
-
-const DEFAULT_PIXEL_DENSITY = 8;
 const BASE_PIXEL_SIZE = 6;
 const DEFAULT_BACKGROUND_COLOR = "#faf5f5";
 const DEFAULT_DPR = 2;
@@ -19,7 +14,6 @@ const MAX_PIXEL_SIZE = 64;
 
 export class Engine {
   readonly canvas: HTMLCanvasElement;
-  readonly pixelDensity: number;
   readonly clientHeight: number;
   readonly clientWidth: number;
 
@@ -33,9 +27,8 @@ export class Engine {
   private _timeElapsed: number = 0;
   private _animationQueue: Array<AnimationState> = [];
 
-  constructor(canvas: HTMLCanvasElement, params?: EngineRenderParams) {
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.pixelDensity = params?.pixelDensity ?? DEFAULT_PIXEL_DENSITY;
     this.clientHeight = canvas.clientHeight;
     this.clientWidth = canvas.clientWidth;
 
