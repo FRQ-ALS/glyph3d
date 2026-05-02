@@ -4,7 +4,7 @@ const fakeAnimMesh = (): any => ({ x: 0, y: 0, z: 0, pitch: 0, yaw: 0 });
 
 describe("Animation path generation", () => {
   test("two keyframes produce a monotonic, linearly interpolated path", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0 },
       100: { x: 100 },
     });
@@ -25,7 +25,7 @@ describe("Animation path generation", () => {
   });
 
   test("three keyframes hit the exact midpoint value at the midpoint timestamp", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0 },
       50: { x: 50 },
       100: { x: 100 },
@@ -41,7 +41,7 @@ describe("Animation path generation", () => {
   });
 
   test("multi-segment path has strictly increasing timestamps", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0 },
       25: { x: 10 },
       75: { x: 90 },
@@ -55,7 +55,7 @@ describe("Animation path generation", () => {
   });
 
   test("non-monotonic keyframe values are interpolated locally per segment", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0 },
       50: { x: 100 },
       100: { x: 0 },
@@ -68,7 +68,7 @@ describe("Animation path generation", () => {
   });
 
   test("multiple properties produce one frame entry per property at each timestamp", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0, yaw: 0 },
       100: { x: 100, yaw: 90 },
     });
@@ -86,7 +86,7 @@ describe("Animation path generation", () => {
   });
 
   test("missing next-keyframe property falls back to current value (no movement on that property)", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 10, y: 5 },
       100: { x: 50 },
     });
@@ -97,9 +97,87 @@ describe("Animation path generation", () => {
   });
 });
 
+describe("Animation easing", () => {
+  test("linear: midpoint of single segment is the linear midpoint", () => {
+    const a = new Animation(1000, 0, "linear", 1, {
+      0: { x: 0 },
+      100: { x: 100 },
+    });
+    expect(a.path.find((p) => p.timestamp === 250)!.frames[0].value).toBeCloseTo(25);
+    expect(a.path.find((p) => p.timestamp === 500)!.frames[0].value).toBeCloseTo(50);
+    expect(a.path.find((p) => p.timestamp === 750)!.frames[0].value).toBeCloseTo(75);
+  });
+
+  test("ease-in: progress at midpoint is below linear (slow start)", () => {
+    const a = new Animation(1000, 0, "ease-in", 1, {
+      0: { x: 0 },
+      100: { x: 100 },
+    });
+    expect(a.path.find((p) => p.timestamp === 500)!.frames[0].value).toBeCloseTo(25);
+  });
+
+  test("ease-out: progress at midpoint is above linear (fast start)", () => {
+    const a = new Animation(1000, 0, "ease-out", 1, {
+      0: { x: 0 },
+      100: { x: 100 },
+    });
+    expect(a.path.find((p) => p.timestamp === 500)!.frames[0].value).toBeCloseTo(75);
+  });
+
+  test("ease-in-out: passes through 50 at midpoint and is symmetric around it", () => {
+    const a = new Animation(1000, 0, "ease-in-out", 1, {
+      0: { x: 0 },
+      100: { x: 100 },
+    });
+    expect(a.path.find((p) => p.timestamp === 500)!.frames[0].value).toBeCloseTo(50);
+    expect(a.path.find((p) => p.timestamp === 250)!.frames[0].value).toBeCloseTo(12.5);
+    expect(a.path.find((p) => p.timestamp === 750)!.frames[0].value).toBeCloseTo(87.5);
+  });
+
+  test("ease (default smoothstep): midpoint at 50, monotonic, hits exact endpoint", () => {
+    const a = new Animation(1000, 0, "ease", 1, {
+      0: { x: 0 },
+      100: { x: 100 },
+    });
+    expect(a.path.find((p) => p.timestamp === 500)!.frames[0].value).toBeCloseTo(50);
+    expect(a.path[a.path.length - 1].frames[0].value).toBeCloseTo(100);
+
+    for (let i = 1; i < a.path.length; i++) {
+      expect(a.path[i].frames[0].value).toBeGreaterThanOrEqual(a.path[i - 1].frames[0].value);
+    }
+  });
+
+  test("every easing reaches the exact end value at the final timestamp", () => {
+    const timings = ["linear", "ease", "ease-in", "ease-out", "ease-in-out"] as const;
+    for (const t of timings) {
+      const a = new Animation(1000, 0, t, 1, {
+        0: { x: 0 },
+        100: { x: 100 },
+      });
+      const last = a.path[a.path.length - 1];
+      expect(last.timestamp).toBe(1000);
+      expect(last.frames[0].value).toBeCloseTo(100);
+    }
+  });
+
+  test("easing applies per-segment so each segment restarts its eased curve", () => {
+    const a = new Animation(1000, 0, "ease-in", 1, {
+      0: { x: 0 },
+      50: { x: 100 },
+      100: { x: 200 },
+    });
+
+    expect(a.path.find((p) => p.timestamp === 500)!.frames[0].value).toBeCloseTo(100);
+    expect(a.path.find((p) => p.timestamp === 1000)!.frames[0].value).toBeCloseTo(200);
+
+    expect(a.path.find((p) => p.timestamp === 250)!.frames[0].value).toBeCloseTo(25);
+    expect(a.path.find((p) => p.timestamp === 750)!.frames[0].value).toBeCloseTo(125);
+  });
+});
+
 describe("AnimationExecutor.animate", () => {
   test("does nothing while elapsedTime is below delay", () => {
-    const a = new Animation(1000, 200, "ease", 1, {
+    const a = new Animation(1000, 200, "linear", 1, {
       0: { x: 0 },
       100: { x: 100 },
     });
@@ -113,7 +191,7 @@ describe("AnimationExecutor.animate", () => {
   });
 
   test("applies the path value matching the elapsed time onto the mesh", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0 },
       100: { x: 100 },
     });
@@ -125,7 +203,7 @@ describe("AnimationExecutor.animate", () => {
   });
 
   test("dispatches rotate properties to pitch/yaw and translate properties to x/y/z", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { pitch: 0, yaw: 0, x: 0, y: 0, z: 0 },
       100: { pitch: 30, yaw: 60, x: 1, y: 2, z: 3 },
     });
@@ -142,7 +220,7 @@ describe("AnimationExecutor.animate", () => {
   });
 
   test("marks animation complete when elapsed exceeds duration on a single-iteration animation", () => {
-    const a = new Animation(1000, 0, "ease", 1, {
+    const a = new Animation(1000, 0, "linear", 1, {
       0: { x: 0 },
       100: { x: 100 },
     });
@@ -155,7 +233,7 @@ describe("AnimationExecutor.animate", () => {
   });
 
   test("infinite iteration loops the path by elapsed % duration", () => {
-    const a = new Animation(1000, 0, "ease", "infinite", {
+    const a = new Animation(1000, 0, "linear", "infinite", {
       0: { x: 0 },
       100: { x: 100 },
     });
@@ -169,7 +247,7 @@ describe("AnimationExecutor.animate", () => {
   });
 
   test("numeric iteration count restarts within the loop count and completes after", () => {
-    const a = new Animation(1000, 0, "ease", 2, {
+    const a = new Animation(1000, 0, "linear", 2, {
       0: { x: 0 },
       100: { x: 100 },
     });

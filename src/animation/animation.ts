@@ -45,7 +45,8 @@ export class Animation {
     let currentFrameTimestamp = segStart + step;
 
     while (currentFrameTimestamp <= segEnd) {
-      const localProgress = (currentFrameTimestamp - segStart) / segDuration;
+      const linearProgress = (currentFrameTimestamp - segStart) / segDuration;
+      const easedProgress = this._applyEasing(linearProgress);
       const properties = Object.keys(this.keyframes[current]);
 
       const frames: Array<AnimationPathFrame> = [];
@@ -55,7 +56,7 @@ export class Animation {
         const currentValue = this.keyframes[current][property] as number;
         const nextValue = (this.keyframes[next][property] as number) ?? currentValue;
 
-        const frameMovement = currentValue + (nextValue - currentValue) * localProgress;
+        const frameMovement = currentValue + (nextValue - currentValue) * easedProgress;
         frames.push({
           property,
           value: frameMovement,
@@ -64,6 +65,22 @@ export class Animation {
       });
       this._createFrame(currentFrameTimestamp, frames);
       currentFrameTimestamp += step;
+    }
+  }
+
+  private _applyEasing(t: number): number {
+    switch (this._timing) {
+      case "linear":
+        return t;
+      case "ease-in":
+        return t * t;
+      case "ease-out":
+        return 1 - (1 - t) * (1 - t);
+      case "ease-in-out":
+        return t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t);
+      case "ease":
+      default:
+        return t * t * (3 - 2 * t);
     }
   }
 

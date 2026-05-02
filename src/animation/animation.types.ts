@@ -15,12 +15,13 @@ export type Keyframes = {
 export type AnimationIterationCount = number | "infinite";
 
 /**
+ * linear: constant speed throughout.
  * ease: starts slow, speeds up, then slows down (default).
  * ease-in: starts slow, then speeds up.
  * ease-out: starts fast, then slows down.
  * ease-in-out: starts and ends slow, fast in the middle.
  */
-export type AnimationTiming = "ease" | "ease-in" | "ease-out" | "ease-in-out";
+export type AnimationTiming = "linear" | "ease" | "ease-in" | "ease-out" | "ease-in-out";
 
 export interface AnimationState {
   animation: Animation;
