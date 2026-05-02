@@ -100,19 +100,16 @@ export class Mesh {
   }
 
   private computeCentroid() {
-    this._centroid = this.vertices.reduce(
-      (acc, v) => {
-        acc.x += v.x;
-        acc.y += v.y;
-        acc.z += v.z;
-        return acc;
-      },
-      { x: 0, y: 0, z: 0 }
-    );
+    let sumX = 0;
+    let sumY = 0;
+    let sumZ = 0;
+    for (const v of this.vertices) {
+      sumX += v.x;
+      sumY += v.y;
+      sumZ += v.z;
+    }
     const n = this.vertices.length;
-    this._centroid.x /= n;
-    this._centroid.y /= n;
-    this._centroid.z /= n;
+    this._centroid = new Vector(sumX / n, sumY / n, sumZ / n);
   }
 
   public resolveLocalMovement(): Array<Vector> {

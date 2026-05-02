@@ -44,11 +44,7 @@ export namespace VectorMath {
   }
 
   export function subtract(a: Vector, b: Vector): Vector {
-    return {
-      x: a.x - b.x,
-      y: a.y - b.y,
-      z: a.z - b.z,
-    };
+    return new Vector(a.x - b.x, a.y - b.y, a.z - b.z);
   }
 
   export function magnitude(v: Vector): number {
@@ -56,11 +52,7 @@ export namespace VectorMath {
   }
 
   export function cross(a: Vector, b: Vector): Vector {
-    return {
-      x: a.y * b.z - a.z * b.y,
-      y: a.z * b.x - a.x * b.z,
-      z: a.x * b.y - a.y * b.x,
-    };
+    return new Vector(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
   }
 
   export function scalarCross2D(a: Vector, b: Vector, c: Vector) {
