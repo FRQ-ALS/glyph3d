@@ -6,7 +6,7 @@ import { Scene } from "../scene/scene";
  * For orbital cameras, use ArcRotateCamera instead.
  */
 export class Camera {
-  protected currentLocation: Vector | undefined;
+  protected currentLocation: Vector;
 
   /**
    * @param name Camera identifier
@@ -24,17 +24,14 @@ export class Camera {
     protected sensitivity?: number
   ) {
     scene.activeCamera = this;
-    // Only set location if instantiating base Camera, not subclasses
-    if (new.target === Camera) {
-      this.currentLocation = origin;
-    }
+    this.currentLocation = origin;
   }
 
   public setSensitivity(sensitivity: number) {
     this.sensitivity = sensitivity;
   }
 
-  public getCurrentLocation(): Vector | undefined {
+  public getCurrentLocation(): Vector {
     return this.currentLocation;
   }
 

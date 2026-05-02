@@ -117,8 +117,9 @@ export class Engine {
   draw(scene: Scene): void {
     const camera = scene.activeCamera;
     if (!camera) {
-      console.warn("Cannot render scene: camera is undefined. Please add a camera to the scene.");
-      return;
+      throw new Error(
+        "Cannot render scene: no active camera. Add a camera to the scene before calling draw()."
+      );
     }
 
     this.adjustPixelSizeForCamera(camera);

@@ -307,10 +307,7 @@ export class Renderer {
     }
   }
 
-  applyFrustumCulling(v1: Vector, v2: Vector, v3: Vector, camera: Camera) {
-    const cam = camera.getCurrentLocation();
-    if (!cam) return false;
-
+  applyFrustumCulling(v1: Vector, v2: Vector, v3: Vector, _camera: Camera) {
     const verts = [v1, v2, v3];
     if (verts.every((v) => v.z >= 0)) return false;
 

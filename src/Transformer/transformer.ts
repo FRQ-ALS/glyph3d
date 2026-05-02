@@ -39,8 +39,6 @@ export class Transformer {
 
   private translateToWorldSpace(vertices: Vector[], camera: Camera): Vector[] {
     const cameraPosition = camera.getCurrentLocation();
-    if (!cameraPosition) return [];
-
     return vertices.map((vertex: Vector) => this.subtractCameraPosition(vertex, cameraPosition));
   }
 

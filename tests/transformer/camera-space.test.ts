@@ -33,14 +33,4 @@ describe("Transformer.toCameraSpace", () => {
     const [v] = t.toCameraSpace(mesh, cam);
     expect(v.z).toBeCloseTo(-5);
   });
-
-  test("returns empty array when camera location is missing", () => {
-    const t = new Transformer(800, 600);
-    const cam = fakeCamera();
-    cam.state.location = undefined;
-    const mesh = fakeMesh([new Vector(1, 2, 3)]);
-
-    const result = t.toCameraSpace(mesh, cam);
-    expect(result).toEqual([]);
-  });
 });

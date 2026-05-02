@@ -84,14 +84,12 @@ describe("Renderer.renderFaces end-to-end", () => {
 });
 
 describe("Engine.draw integration", () => {
-  test("scene with no meshes and no camera does not throw and clears the canvas", () => {
+  test("scene with no active camera throws a clear error", () => {
     const { canvas } = makeFakeCanvas(200, 200);
     const engine = new Engine(canvas as any);
     const scene: any = { activeCamera: undefined, meshes: [], backgroundColor: "" };
 
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
-    expect(() => engine.draw(scene)).not.toThrow();
-    warn.mockRestore();
+    expect(() => engine.draw(scene)).toThrow(/no active camera/i);
   });
 
   test("scene with a camera but no meshes runs the full pipeline without throwing", () => {

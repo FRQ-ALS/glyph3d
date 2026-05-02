@@ -59,19 +59,6 @@ describe("Renderer.applyFrustumCulling", () => {
     expect(wide.applyFrustumCulling(v0, v1, v2, cam)).toBe(true);
     expect(square.applyFrustumCulling(v0, v1, v2, cam)).toBe(false);
   });
-
-  test("returns false when camera location is missing", () => {
-    const r = newRenderer();
-    const noLocCam = fakeCamera();
-    noLocCam.state.location = undefined;
-    const ok = r.applyFrustumCulling(
-      new Vector(0, 0, -10),
-      new Vector(1, 0, -10),
-      new Vector(0, 1, -10),
-      noLocCam
-    );
-    expect(ok).toBe(false);
-  });
 });
 
 describe("Renderer.isFacingCamera (screen-space cross product sign)", () => {
