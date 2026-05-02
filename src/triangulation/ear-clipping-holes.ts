@@ -5,8 +5,7 @@ import { TriangulationUtils } from "./utils";
 export function bridgeHolesToBoundary(outer: Vector[], holes: Vector[][]): Vector[] {
   if (holes.length === 0) return [...outer];
 
-  const result = [...outer];
-  TriangulationUtils.ensureWinding(result, "CCW");
+  const result = TriangulationUtils.ensureWinding([...outer], "CCW");
 
   // Sort holes by rightmost vertex x-coordinate (rightmost first)
   const sortedHoles = [...holes].sort((a, b) => {
@@ -14,8 +13,7 @@ export function bridgeHolesToBoundary(outer: Vector[], holes: Vector[][]): Vecto
   });
 
   for (const hole of sortedHoles) {
-    const holeCopy = [...hole];
-    TriangulationUtils.ensureWinding(holeCopy, "CW");
+    const holeCopy = TriangulationUtils.ensureWinding([...hole], "CW");
 
     const anchor = rightmostVertex(holeCopy);
     const visibleIdx = findVisibleVertexIndex(anchor, result);
