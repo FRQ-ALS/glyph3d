@@ -26,7 +26,9 @@ export class RotateCamera extends Camera {
   ) {
     super(name, scene, pitch, yaw, origin);
     this.radius = radius;
-    this.calcLocation(yaw, pitch);
+    this.yaw = yaw;
+    this.pitch = pitch;
+    this.calcLocation();
   }
 
   public getViewDistance(): number {
@@ -37,17 +39,17 @@ export class RotateCamera extends Camera {
    * Converts spherical coords (pitch, yaw, radius) to cartesian position.
    * Pitch is clamped slightly to avoid gimbal lock at poles.
    */
-  private calcLocation(yaw: number, pitch: number): void {
+  private calcLocation(): void {
     // Start with camera behind target
     const offset = new Vector(0, 0, this.radius);
 
     // Rotate around X-axis (pitch)
-    const { y2: y1, z2: z1 } = rotateAroundXAxis(offset.y, offset.z, pitch);
+    const { y2: y1, z2: z1 } = rotateAroundXAxis(offset.y, offset.z, this.pitch);
     offset.y = y1;
     offset.z = z1;
 
     // Rotate around Y-axis (yaw)
-    const { x1: x2, z1: z2 } = rotateAroundYAxis(offset.x, offset.z, yaw);
+    const { x1: x2, z1: z2 } = rotateAroundYAxis(offset.x, offset.z, this.yaw);
     offset.x = x2;
     offset.z = z2;
 
@@ -81,11 +83,26 @@ export class RotateCamera extends Camera {
     canvas.addEventListener("wheel", (e: WheelEvent) => {
       e.preventDefault();
 
-      const newRadius = this.radius + e.deltaY * -10;
+      // Normalize deltaY across input devices and deltaMode units
+      let delta = e.deltaY;
+
+      if (e.deltaMode === 1) {
+        delta *= 16; // DOM_DELTA_LINE: ~16px per line
+      } else if (e.deltaMode === 2) {
+        delta *= 100; // DOM_DELTA_PAGE
+      }
+
+      const isMouseWheel = Math.abs(delta) >= 50 && Number.isInteger(delta);
+      const scale = isMouseWheel ? 0.3 : 1.0;
+
+      const MAX_STEP = 100;
+      const normalized = Math.sign(delta) * Math.min(Math.abs(delta), MAX_STEP) * scale;
+
+      const newRadius = this.radius + normalized;
       if (newRadius < 1) return;
 
       this.radius = newRadius;
-      this.calcLocation(this.yaw, this.pitch);
+      this.calcLocation();
     });
 
     // Drag to rotate
@@ -100,7 +117,7 @@ export class RotateCamera extends Camera {
       this.yaw += dx * MOVE_SENSITIVITY;
       this.pitch += dy * MOVE_SENSITIVITY;
 
-      this.calcLocation(this.yaw, this.pitch);
+      this.calcLocation();
 
       lastMousePos = { x: e.clientX, y: e.clientY };
     });
