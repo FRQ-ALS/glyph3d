@@ -1,5 +1,5 @@
 import { Scene } from "../scene";
-import { DefaultSettings, Directionalettings, PointSettings, SpotSettings } from "./light.types";
+import { DefaultSettings, DirectionalSettings, PointSettings, SpotSettings } from "./light.types";
 
 /**
  * Default light
@@ -16,7 +16,7 @@ export class Light<TSettings = DefaultSettings> {
 /**
  * Infinite distance, parralel light rays. E.g. sun
  */
-export class DirectionalLight extends Light<Directionalettings> {}
+export class DirectionalLight extends Light<DirectionalSettings> {}
 
 /**
  * Emits light in cone shape at specific location. E.g. flashlight

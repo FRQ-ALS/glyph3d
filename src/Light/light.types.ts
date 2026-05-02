@@ -14,7 +14,7 @@ export interface SpotSettings extends DefaultSettings {
   target: Vector;
 }
 
-export interface Directionalettings extends DefaultSettings {
+export interface DirectionalSettings extends DefaultSettings {
   pitch: number;
   yaw: number;
 }
