@@ -28,28 +28,30 @@ describe("Renderer.renderFaces end-to-end", () => {
   });
 
   test("when two front-facing triangles overlap in screen space, the closer one occludes the farther one", () => {
-    const r = new Renderer(4, 200, 200);
     const cam = fakeCamera({ location: new Vector(0, 0, 0) });
+    const farVerts = [new Vector(0, 0, -10), new Vector(0, 5, -10), new Vector(5, 0, -10)];
+    const nearVerts = [new Vector(0, 0, -2), new Vector(0, 5, -2), new Vector(5, 0, -2)];
 
-    const verts = [
-      // Far triangle (faceIndex=0 -> '@')
-      new Vector(0, 0, -10),
-      new Vector(0, 5, -10),
-      new Vector(5, 0, -10),
-      // Near triangle, same XY, smaller -z -> closer (faceIndex=1 -> '#')
-      new Vector(0, 0, -2),
-      new Vector(0, 5, -2),
-      new Vector(5, 0, -2),
-    ];
+    // Render both triangles together
+    const both = new Renderer(4, 200, 200);
+    both.renderFaces(
+      [...farVerts, ...nearVerts],
+      [triFace(0, 1, 2, 0), triFace(3, 4, 5, 1)],
+      cam,
+      "blue"
+    );
+    const { ctx: ctxBoth, fillTextCalls: callsBoth } = makeFakeCanvas();
+    both.flushPixelBuffer(ctxBoth as any);
 
-    r.renderFaces(verts, [triFace(0, 1, 2, 0), triFace(3, 4, 5, 1)], cam, "blue");
+    // Render near triangle alone
+    const nearOnly = new Renderer(4, 200, 200);
+    nearOnly.renderFaces(nearVerts, [triFace(0, 1, 2, 0)], cam, "blue");
+    const { ctx: ctxNear, fillTextCalls: callsNear } = makeFakeCanvas();
+    nearOnly.flushPixelBuffer(ctxNear as any);
 
-    const { ctx, fillTextCalls } = makeFakeCanvas();
-    r.flushPixelBuffer(ctx as any);
-
-    expect(fillTextCalls.length).toBeGreaterThan(0);
-    expect(fillTextCalls.some((c) => c.char === "#")).toBe(true);
-    expect(fillTextCalls.every((c) => c.char !== "@")).toBe(true);
+    // Occlusion: drawing both should produce no extra strokes vs the closer one alone.
+    expect(callsBoth.length).toBe(callsNear.length);
+    expect(callsBoth.length).toBeGreaterThan(0);
   });
 
   test("backface (reversed winding) produces zero rendered glyphs", () => {

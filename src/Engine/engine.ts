@@ -135,7 +135,14 @@ export class Engine {
 
     for (const mesh of scene.meshes) {
       const cameraSpaceVertices = this.transformer.toCameraSpace(mesh, camera);
-      this.renderer.renderFaces(cameraSpaceVertices, mesh.faces, camera, mesh.color);
+      this.renderer.renderFaces(
+        cameraSpaceVertices,
+        mesh.faces,
+        camera,
+        mesh.color,
+        scene.lights,
+        scene.ambientLight
+      );
     }
 
     this.renderer.flushPixelBuffer(this.ctx);

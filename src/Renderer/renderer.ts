@@ -2,6 +2,7 @@ import { Vector } from "../vector";
 import { VectorMath } from "../spatial/vector";
 import { Triangle, Face } from "../mesh/mesh.types";
 import { Camera } from "../camera";
+import { Light, ViewLight } from "../light";
 import { Transformer } from "../transformer";
 import { Pixel } from "./renderer.types";
 
@@ -11,6 +12,7 @@ export class Renderer {
   private transformer: Transformer;
 
   private static readonly NEAR_Z = -0.01;
+  private static readonly BRIGHTNESS_RAMP = " .:-=+*#%@";
 
   constructor(
     private pixelSize: number,
@@ -55,10 +57,14 @@ export class Renderer {
     cameraSpaceVertices: Array<Vector>,
     faces: Face[],
     camera: Camera,
-    color: string
+    color: string,
+    lights: Light[] = [],
+    ambient: number = 1
   ) {
+    const viewLights: ViewLight[] = lights.map((l) => l.toViewSpace(this.transformer, camera));
+
     faces.forEach((face: Face) => {
-      this.collectFacePixels(cameraSpaceVertices, face, camera, color);
+      this.collectFacePixels(cameraSpaceVertices, face, camera, color, viewLights, ambient);
     });
   }
 
@@ -66,9 +72,17 @@ export class Renderer {
     cameraSpaceVertices: Array<Vector>,
     face: Face,
     camera: Camera,
-    color: string
+    color: string,
+    viewLights: ViewLight[],
+    ambient: number
   ) {
     const getVerts = (t: Triangle) => t.indices.map((i) => cameraSpaceVertices[i]);
+
+    const faceNormal = this.computeFaceNormal(cameraSpaceVertices, face);
+    const faceCentroid = this.computeFaceCentroid(cameraSpaceVertices, face);
+    const brightness = this.computeBrightness(faceCentroid, faceNormal, viewLights, ambient);
+    const char = this.getCharForBrightness(brightness);
+    const shadedColor = this.scaleColor(color, brightness);
 
     for (const t of face.triangles) {
       const [cv0, cv1, cv2] = getVerts(t);
@@ -83,9 +97,71 @@ export class Renderer {
         if (!this.applyFrustumCulling(v0, v1, v2, camera)) continue;
         if (!this.isFacingCamera(v0, v1, v2)) continue;
 
-        this.collectTrianglePixels(v0, v1, v2, face.face, color);
+        this.collectTrianglePixels(v0, v1, v2, char, shadedColor, face.face);
       }
     }
+  }
+
+  private computeFaceNormal(verts: Vector[], face: Face): Vector {
+    const [i0, i1, i2] = face.triangles[0].indices;
+    const a = verts[i0];
+    const b = verts[i1];
+    const c = verts[i2];
+    const edge1 = new Vector(b.x - a.x, b.y - a.y, b.z - a.z);
+    const edge2 = new Vector(c.x - a.x, c.y - a.y, c.z - a.z);
+    return VectorMath.normalize(VectorMath.cross(edge1, edge2));
+  }
+
+  private computeFaceCentroid(verts: Vector[], face: Face): Vector {
+    const [i0, i1, i2] = face.triangles[0].indices;
+    const a = verts[i0];
+    const b = verts[i1];
+    const c = verts[i2];
+    return new Vector((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3, (a.z + b.z + c.z) / 3);
+  }
+
+  private computeBrightness(
+    point: Vector,
+    normal: Vector,
+    viewLights: ViewLight[],
+    ambient: number
+  ): number {
+    // Quirk worth knowing: this engine's cross-product face normal points
+    // *away* from the camera on front-facing tris (a side effect of the
+    // canvas Y-flip during projection). That happens to land in the same
+    // hemisphere as a light vector expressed as the direction the light
+    // travels, so the dot products inside contributionAt come out positive
+    // for lit faces — no extra sign flip needed here.
+    let brightness = ambient;
+    for (const light of viewLights) {
+      brightness += light.contributionAt(point, normal);
+    }
+    return Math.min(1, Math.max(0, brightness));
+  }
+
+  private getCharForBrightness(brightness: number): string {
+    const ramp = Renderer.BRIGHTNESS_RAMP;
+    const idx = Math.min(ramp.length - 1, Math.max(0, Math.floor(brightness * ramp.length)));
+    return ramp[idx];
+  }
+
+  private scaleColor(color: string, factor: number): string {
+    if (!color.startsWith("#")) return color;
+    const hex = color.slice(1);
+    let r: number, g: number, b: number;
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.slice(0, 2), 16);
+      g = parseInt(hex.slice(2, 4), 16);
+      b = parseInt(hex.slice(4, 6), 16);
+    } else {
+      return color;
+    }
+    const clamp = (c: number) => Math.max(0, Math.min(255, Math.round(c * factor)));
+    return `rgb(${clamp(r)}, ${clamp(g)}, ${clamp(b)})`;
   }
 
   private clipAgainstNearPlane(v0: Vector, v1: Vector, v2: Vector): Vector[][] {
@@ -138,20 +214,14 @@ export class Renderer {
     v0: Vector,
     v1: Vector,
     v2: Vector,
-    faceIndex: number,
-    color: string
+    char: string,
+    color: string,
+    faceIndex: number
   ) {
     const vertices = [v0, v1, v2].sort((a, b) => a.y - b.y);
     const [top, mid, bot] = vertices;
 
-    const char = this.getCharForFace(faceIndex);
-
     this.rasterizeTriangleToBuffer(top, mid, bot, char, color, faceIndex);
-  }
-
-  private getCharForFace(faceIndex: number): string {
-    const faceChars = ["@", "#", "=", ".", "+", "*"];
-    return faceChars[faceIndex] || "?";
   }
 
   private rasterizeTriangleToBuffer(

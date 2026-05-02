@@ -8,8 +8,9 @@ describe("Renderer rasterizer viewport clamping", () => {
       new Vector(-1_000_000, -1_000_000, -1),
       new Vector(2_000_000, -1_000_000, -1),
       new Vector(-1_000_000, 2_000_000, -1),
-      0,
-      "#fff"
+      "@",
+      "#fff",
+      0
     );
     const cellsInViewport = 51 * 51;
     expect(r.pixelBuffer.length).toBeLessThanOrEqual(cellsInViewport);

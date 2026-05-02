@@ -28,6 +28,27 @@ export class Transformer {
     return translated.map((v) => this.applyCameraRotation(v, camera));
   }
 
+  /**
+   * Rotates a world-space direction into camera space. No translation —
+   * directions are pure offsets, so the camera's position doesn't matter.
+   */
+  public directionToCameraSpace(direction: Vector, camera: Camera): Vector {
+    const { pitch, yaw } = camera.getRotation();
+    const { x1, z1 } = rotateAroundYAxis(direction.x, direction.z, -yaw);
+    const { y2, z2 } = rotateAroundXAxis(direction.y, z1, -pitch);
+    return new Vector(x1, y2, z2);
+  }
+
+  /**
+   * Moves a world-space point into camera space: shift so the camera is at the
+   * origin, then undo the camera's rotation. Used for positional lights.
+   */
+  public pointToCameraSpace(point: Vector, camera: Camera): Vector {
+    const cam = camera.getCurrentLocation();
+    const translated = new Vector(point.x - cam.x, point.y - cam.y, point.z - cam.z);
+    return this.applyCameraRotation(translated, camera);
+  }
+
   public projectToScreen(vertex: Vector): Vector {
     const projected = this.applyPerspectiveProjection(vertex);
     const screen = toCanvasFromCartesian(projected, {

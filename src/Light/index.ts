@@ -1,1 +1,2 @@
-export { SpotLight, DirectionalLight, PointLight, Light } from "./light";
+export type { ViewLight } from "./light";
+export { Light, DirectionalLight, PointLight, SpotLight } from "./light";

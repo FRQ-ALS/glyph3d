@@ -8,6 +8,7 @@ export class Scene {
   private _meshes: Array<Mesh> = [];
   private _activeCamera: Camera | undefined = undefined;
   public lights: Array<Light> = [];
+  public ambientLight: number = 0.2;
   private _backgroundColor: string = "";
 
   constructor(engine: Engine) {
