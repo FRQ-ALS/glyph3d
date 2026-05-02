@@ -37,30 +37,33 @@ export class Animation {
 
   // Animations are split into subanimations bwteen each step
   private _createSubAnimation(current: number, next: number) {
-    // Duration of each frame in milliseconds, calculated from the difference between consecutive timestamps
-    const frameDuration = this._duration / (next - current);
-    let currentFrameTimestamp = frameDuration;
+    const step = this._duration / 100;
+    const segStart = (current / 100) * this._duration;
+    const segEnd = (next / 100) * this._duration;
+    const segDuration = segEnd - segStart;
 
-    while (currentFrameTimestamp <= (next / 100) * this.duration) {
-      const factor = Math.max(currentFrameTimestamp / this.duration, 0);
+    let currentFrameTimestamp = segStart + step;
+
+    while (currentFrameTimestamp <= segEnd) {
+      const localProgress = (currentFrameTimestamp - segStart) / segDuration;
       const properties = Object.keys(this.keyframes[current]);
 
       const frames: Array<AnimationPathFrame> = [];
 
       properties.forEach((prop: string) => {
-        const nextValue =
-          this.keyframes[next][prop as AnimatedProperty] ??
-          this.keyframes[current][prop as AnimatedProperty];
+        const property = prop as AnimatedProperty;
+        const currentValue = this.keyframes[current][property] as number;
+        const nextValue = (this.keyframes[next][property] as number) ?? currentValue;
 
-        const frameMovement = (nextValue as number) * factor;
+        const frameMovement = currentValue + (nextValue - currentValue) * localProgress;
         frames.push({
-          property: prop as AnimatedProperty,
+          property,
           value: frameMovement,
-          animation: this._getAnimationType(prop as AnimatedProperty),
+          animation: this._getAnimationType(property),
         });
       });
       this._createFrame(currentFrameTimestamp, frames);
-      currentFrameTimestamp += frameDuration;
+      currentFrameTimestamp += step;
     }
   }
 
