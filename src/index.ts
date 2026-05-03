@@ -7,4 +7,3 @@ export * from "./light/index";
 export * from "./engine/index";
 export * from "./spatial/index";
 export * from "./animation/index";
-export * from "./triangulation/index";
